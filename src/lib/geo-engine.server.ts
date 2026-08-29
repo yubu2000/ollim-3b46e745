@@ -74,7 +74,7 @@ export async function fetchPage(rawUrl: string) {
 
 function match(html: string, re: RegExp) {
   const m = html.match(re);
-  return m ? m[1].trim() : "";
+  return m?.[1]?.trim() ?? "";
 }
 
 function all(html: string, re: RegExp) {
@@ -117,10 +117,10 @@ export async function runChecks(url: string, html: string): Promise<CheckItem[]>
   const canonical = match(html, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i);
   const ogTitle = match(html, /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i);
   const jsonLd = all(html, /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)
-    .map((m) => m[1])
+    .map((m) => m[1] ?? "")
     .join(" ");
   const internalLinks = all(html, /<a\b[^>]+href=["']([^"']+)["']/gi).filter(
-    (m) => m[1].startsWith("/") || m[1].startsWith(origin),
+    (m) => (m[1] ?? "").startsWith("/") || (m[1] ?? "").startsWith(origin),
   );
   const lang = match(html, /<html[^>]+lang=["']([^"']*)["']/i);
 
@@ -238,7 +238,7 @@ export async function runChecks(url: string, html: string): Promise<CheckItem[]>
   const hasFaqSchema = /FAQPage/i.test(jsonLd);
   const hasOrgSchema = /(Organization|LocalBusiness|TravelAgency)/i.test(jsonLd);
   const questionHeadings = [...h2s, ...all(html, /<h3[^>]*>([\s\S]*?)<\/h3>/gi)].filter((m) =>
-    /\?|어떻게|무엇|얼마|추천|비용|가격/.test(stripTags(m[1])),
+    /\?|어떻게|무엇|얼마|추천|비용|가격/.test(stripTags(m[1] ?? "")),
   );
   const numbers = text.match(/\d[\d,.]*\s*(원|만원|박|일|명|%|km|시간)/g) ?? [];
   const firstParagraph = stripTags(match(html, /<p[^>]*>([\s\S]*?)<\/p>/i));
