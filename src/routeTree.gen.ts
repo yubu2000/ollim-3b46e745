@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMentionsRoute = AppMentionsRouteImport.update({
+  id: '/mentions',
+  path: '/mentions',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAuditIdRoute = AppAuditIdRouteImport.update({
   id: '/audit/$id',
   path: '/audit/$id',
@@ -45,12 +51,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/mentions': typeof AppMentionsRoute
   '/app/': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/mentions': typeof AppMentionsRoute
   '/app': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
@@ -59,15 +67,24 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/mentions': typeof AppMentionsRoute
   '/app/': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/auth' | '/app/' | '/app/audit/$id'
+  fullPaths:
+    '/' | '/app' | '/auth' | '/app/mentions' | '/app/' | '/app/audit/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app' | '/app/audit/$id'
-  id: '__root__' | '/' | '/app' | '/auth' | '/app/' | '/app/audit/$id'
+  to: '/' | '/auth' | '/app/mentions' | '/app' | '/app/audit/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/auth'
+    | '/app/mentions'
+    | '/app/'
+    | '/app/audit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/mentions': {
+      id: '/app/mentions'
+      path: '/mentions'
+      fullPath: '/app/mentions'
+      preLoaderRoute: typeof AppMentionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/audit/$id': {
       id: '/app/audit/$id'
       path: '/audit/$id'
@@ -117,11 +141,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppMentionsRoute: typeof AppMentionsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAuditIdRoute: typeof AppAuditIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppMentionsRoute: AppMentionsRoute,
   AppIndexRoute: AppIndexRoute,
   AppAuditIdRoute: AppAuditIdRoute,
 }
