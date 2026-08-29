@@ -14,7 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_items: {
+        Row: {
+          audit_id: string
+          category: string
+          created_at: string
+          evidence: string | null
+          id: string
+          passed: boolean
+          recommendation: string | null
+          severity: string
+          title: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          audit_id: string
+          category: string
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          passed?: boolean
+          recommendation?: string | null
+          severity?: string
+          title: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          audit_id?: string
+          category?: string
+          created_at?: string
+          evidence?: string | null
+          id?: string
+          passed?: boolean
+          recommendation?: string | null
+          severity?: string
+          title?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_items_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audits: {
+        Row: {
+          created_at: string
+          geo_score: number
+          id: string
+          project_id: string
+          seo_score: number
+          status: string
+          summary: string | null
+          target_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          geo_score?: number
+          id?: string
+          project_id: string
+          seo_score?: number
+          status?: string
+          summary?: string | null
+          target_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          geo_score?: number
+          id?: string
+          project_id?: string
+          seo_score?: number
+          status?: string
+          summary?: string | null
+          target_url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mention_runs: {
+        Row: {
+          competitors: string[]
+          created_at: string
+          excerpt: string | null
+          id: string
+          mentioned: boolean
+          model: string
+          model_label: string
+          project_id: string
+          prompt_id: string
+          rank: number | null
+          raw_response: string | null
+          user_id: string
+        }
+        Insert: {
+          competitors?: string[]
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          mentioned?: boolean
+          model: string
+          model_label: string
+          project_id: string
+          prompt_id: string
+          rank?: number | null
+          raw_response?: string | null
+          user_id: string
+        }
+        Update: {
+          competitors?: string[]
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          mentioned?: boolean
+          model?: string
+          model_label?: string
+          project_id?: string
+          prompt_id?: string
+          rank?: number | null
+          raw_response?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mention_runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mention_runs_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          brand_name: string
+          competitors: string[]
+          created_at: string
+          id: string
+          name: string
+          site_url: string
+          user_id: string
+        }
+        Insert: {
+          brand_name: string
+          competitors?: string[]
+          created_at?: string
+          id?: string
+          name: string
+          site_url: string
+          user_id: string
+        }
+        Update: {
+          brand_name?: string
+          competitors?: string[]
+          created_at?: string
+          id?: string
+          name?: string
+          site_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prompts: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
