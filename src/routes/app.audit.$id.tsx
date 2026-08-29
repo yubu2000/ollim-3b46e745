@@ -13,7 +13,7 @@ export const Route = createFileRoute("/app/audit/$id")({
 type Item = {
   id: string;
   category: string;
-  label: string;
+  title: string;
   passed: boolean;
   severity: string;
   evidence: string | null;
@@ -106,7 +106,7 @@ function ItemList({ title, items }: { title: string; items: Item[] }) {
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{i.label}</span>
+                  <span className="font-medium">{i.title}</span>
                   {!i.passed && (
                     <Badge variant={i.severity === "high" ? "destructive" : "secondary"}>
                       {i.severity === "high" ? "높음" : i.severity === "medium" ? "보통" : "낮음"}

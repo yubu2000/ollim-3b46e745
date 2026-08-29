@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,17 +35,24 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAuditIdRoute = AppAuditIdRouteImport.update({
+  id: '/audit/$id',
+  path: '/audit/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/app/': typeof AppIndexRoute
+  '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/app': typeof AppIndexRoute
+  '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -52,13 +60,14 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/app/': typeof AppIndexRoute
+  '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/auth' | '/app/'
+  fullPaths: '/' | '/app' | '/auth' | '/app/' | '/app/audit/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/app'
-  id: '__root__' | '/' | '/app' | '/auth' | '/app/'
+  to: '/' | '/auth' | '/app' | '/app/audit/$id'
+  id: '__root__' | '/' | '/app' | '/auth' | '/app/' | '/app/audit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,15 +106,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/audit/$id': {
+      id: '/app/audit/$id'
+      path: '/audit/$id'
+      fullPath: '/app/audit/$id'
+      preLoaderRoute: typeof AppAuditIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
+  AppAuditIdRoute: typeof AppAuditIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
+  AppAuditIdRoute: AppAuditIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
