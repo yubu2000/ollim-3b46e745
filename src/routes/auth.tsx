@@ -41,7 +41,10 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     navigate({ to: "/app" });
   }
 
@@ -54,7 +57,10 @@ function AuthPage() {
       options: { emailRedirectTo: `${window.location.origin}/app` },
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("가입 완료! 바로 로그인해 주세요.");
   }
 
@@ -62,7 +68,10 @@ function AuthPage() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
-    if (result.error) return toast.error("구글 로그인에 실패했습니다.");
+    if (result.error) {
+      toast.error("구글 로그인에 실패했습니다.");
+      return;
+    }
     if (result.redirected) return;
     navigate({ to: "/app" });
   }
