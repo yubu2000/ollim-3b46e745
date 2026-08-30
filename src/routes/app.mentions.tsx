@@ -45,7 +45,7 @@ function MentionsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("mention_runs")
-        .select("*")
+        .select("*, prompts(text)")
         .eq("project_id", project!.id)
         .order("created_at", { ascending: false })
         .limit(60);
@@ -71,7 +71,7 @@ function MentionsPage() {
     if (!user || !q.trim()) return;
     const { error } = await supabase
       .from("prompts")
-      .insert({ user_id: user.id, project_id: project!.id, question: q.trim() });
+      .insert({ user_id: user.id, project_id: project!.id, text: q.trim() });
     if (error) {
       toast.error(error.message);
       return;
@@ -138,7 +138,7 @@ function MentionsPage() {
               key={p.id}
               className="flex items-center justify-between rounded-lg border border-border px-4 py-2 text-sm"
             >
-              <span>{p.question}</span>
+              <span>{p.text}</span>
               <Button variant="ghost" size="icon" onClick={() => void removePrompt(p.id)} aria-label="삭제">
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -187,11 +187,11 @@ function MentionsPage() {
                   {new Date(r.created_at).toLocaleString("ko-KR")}
                 </span>
               </div>
-              <p className="mt-2 font-medium">{r.question}</p>
+              <p className="mt-2 font-medium">{r.prompts?.text}</p>
               {r.excerpt && <p className="mt-1 text-muted-foreground">{r.excerpt}</p>}
-              {Array.isArray(r.competitors_found) && r.competitors_found.length > 0 && (
+              {Array.isArray(r.competitors) && r.competitors.length > 0 && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  함께 언급된 경쟁사: {(r.competitors_found as string[]).join(", ")}
+                  함께 언급된 경쟁사: {(r.competitors as string[]).join(", ")}
                 </p>
               )}
             </div>
