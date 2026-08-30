@@ -14,6 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_events: {
+        Row: {
+          created_at: string
+          delivered: boolean
+          id: string
+          kind: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered?: boolean
+          id?: string
+          kind: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered?: boolean
+          id?: string
+          kind?: string
+          message?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_rules: {
+        Row: {
+          created_at: string
+          email: string
+          enabled: boolean
+          geo_threshold: number
+          id: string
+          last_sent_at: string | null
+          mention_delta: number
+          min_interval_hours: number
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          enabled?: boolean
+          geo_threshold?: number
+          id?: string
+          last_sent_at?: string | null
+          mention_delta?: number
+          min_interval_hours?: number
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          enabled?: boolean
+          geo_threshold?: number
+          id?: string
+          last_sent_at?: string | null
+          mention_delta?: number
+          min_interval_hours?: number
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_rules_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_items: {
         Row: {
           audit_id: string
@@ -101,6 +186,101 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "audits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_audits: {
+        Row: {
+          competitor_id: string | null
+          created_at: string
+          error: string | null
+          geo_score: number
+          id: string
+          is_self: boolean
+          items: Json
+          label: string
+          project_id: string
+          seo_score: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          competitor_id?: string | null
+          created_at?: string
+          error?: string | null
+          geo_score?: number
+          id?: string
+          is_self?: boolean
+          items?: Json
+          label: string
+          project_id: string
+          seo_score?: number
+          url: string
+          user_id: string
+        }
+        Update: {
+          competitor_id?: string | null
+          created_at?: string
+          error?: string | null
+          geo_score?: number
+          id?: string
+          is_self?: boolean
+          items?: Json
+          label?: string
+          project_id?: string
+          seo_score?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_audits_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitor_audits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_sites: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          project_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          project_id: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          project_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_sites_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -247,6 +427,107 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shared_reports: {
+        Row: {
+          audit_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          revoked: boolean
+          token: string
+          user_id: string
+        }
+        Insert: {
+          audit_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          revoked?: boolean
+          token: string
+          user_id: string
+        }
+        Update: {
+          audit_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          revoked?: boolean
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_reports_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage_counters: {
+        Row: {
+          count: number
+          id: string
+          kind: string
+          period: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          kind: string
+          period: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          kind?: string
+          period?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
