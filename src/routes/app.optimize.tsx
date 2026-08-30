@@ -82,7 +82,7 @@ function OptimizePage() {
       {run.data && (
         <>
           <ResultCard title="재작성된 본문" body={run.data.rewrite} onCopy={copy} />
-          <ResultCard title="FAQ JSON-LD (페이지 <head>에 삽입)" body={run.data.faqJsonLd} mono onCopy={copy} />
+          <ResultCard title="FAQ JSON-LD (페이지 <head>에 삽입)" body={run.data.faq} mono onCopy={copy} />
           <ResultCard title="추가 개선 팁" body={run.data.tips} onCopy={copy} />
         </>
       )}
