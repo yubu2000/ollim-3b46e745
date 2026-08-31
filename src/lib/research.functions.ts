@@ -8,7 +8,11 @@ export const getKeywordResearch = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ keyword: z.string().min(1).max(100) }).parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { researchKeyword } = await import("./research.server");
-    return await researchKeyword(data.keyword.trim());
+    const { withAiCredits } = await import("./billing.server");
+    const { AI_COST } = await import("./plans");
+    return await withAiCredits(context.userId, AI_COST.research, () =>
+      researchKeyword(data.keyword.trim()),
+    );
   });

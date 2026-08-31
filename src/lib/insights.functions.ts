@@ -300,9 +300,11 @@ export const deleteWordPressSite = createServerFn({ method: "POST" })
 export const createArticleImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ prompt: z.string().min(2) }).parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { generateArticleImage } = await import("./image.server");
-    return await generateArticleImage(data.prompt);
+    const { withAiCredits } = await import("./billing.server");
+    const { AI_COST } = await import("./plans");
+    return await withAiCredits(context.userId, AI_COST.image, () => generateArticleImage(data.prompt));
   });
 
 /** Publish a generated draft to the member's own WordPress blog (falls back to the shared connector). */
