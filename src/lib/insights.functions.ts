@@ -317,7 +317,17 @@ export const publishArticleToWordPress = createServerFn({ method: "POST" })
         faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
         jsonld: z.string().optional(),
         status: z.enum(["draft", "publish"]).default("draft"),
-        images: imageInput,
+        images: z
+          .array(
+            z.object({
+              dataUrl: z.string().optional(),
+              url: z.string().optional(),
+              alt: z.string().optional(),
+              filename: z.string().optional(),
+            }),
+          )
+          .default([]),
+
       })
       .parse(input),
   )
