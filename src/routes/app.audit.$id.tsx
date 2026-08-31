@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, CheckCircle2, Copy, Link2, Loader2, Printer, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Link2, Loader2, Printer, Wrench, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
 import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
 import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
+import { FIX_GUIDES } from "@/lib/fix-guides";
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
