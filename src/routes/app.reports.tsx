@@ -3,14 +3,31 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { FileText, Presentation, Printer } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useProjects } from "@/lib/project-context";
 import { ScoreRing } from "@/components/ScoreRing";
 
 export const Route = createFileRoute("/app/reports")({
+  head: () => ({
+    meta: [
+      { title: "종합 리포트 — ollim Lab" },
+      { name: "description", content: "SEO·GEO 점수와 AI 언급률 종합 리포트를 문서로 내보냅니다." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ReportsPage,
 });
+
+function download(blob: Blob, filename: string) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 
 function ReportsPage() {
   const { project } = useProjects();
