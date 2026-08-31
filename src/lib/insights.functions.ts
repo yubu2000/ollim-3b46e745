@@ -487,3 +487,18 @@ export const generateSchemas = createServerFn({ method: "POST" })
   });
 
 
+
+/** Publish verification history recorded on a report. */
+export const listPublishVerifications = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ auditId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("publish_verifications")
+      .select("*")
+      .eq("audit_id", data.auditId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
