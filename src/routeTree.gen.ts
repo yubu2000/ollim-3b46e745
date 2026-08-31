@@ -13,10 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppAlertsRouteImport } from './routes/app.alerts'
+import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppCompetitorsRouteImport } from './routes/app.competitors'
 import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppOptimizeRouteImport } from './routes/app.optimize'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
+import { Route as RTokenRouteImport } from './routes/r.$token'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -39,6 +43,16 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAlertsRoute = AppAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
   id: '/competitors',
   path: '/competitors',
@@ -59,6 +73,16 @@ const AppReportsRoute = AppReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
+const RTokenRoute = RTokenRouteImport.update({
+  id: '/r/$token',
+  path: '/r/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAuditIdRoute = AppAuditIdRouteImport.update({
   id: '/audit/$id',
   path: '/audit/$id',
@@ -69,21 +93,29 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/alerts': typeof AppAlertsRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/alerts': typeof AppAlertsRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app': typeof AppIndexRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRoutesById {
@@ -91,11 +123,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/alerts': typeof AppAlertsRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
 export interface FileRouteTypes {
@@ -104,32 +140,44 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/alerts'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app/'
+    | '/api/public/stripe-webhook'
     | '/app/audit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/app/alerts'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app'
+    | '/api/public/stripe-webhook'
     | '/app/audit/$id'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/alerts'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app/'
+    | '/api/public/stripe-webhook'
     | '/app/audit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -137,6 +185,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RTokenRoute: typeof RTokenRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -169,6 +219,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/alerts': {
+      id: '/app/alerts'
+      path: '/alerts'
+      fullPath: '/app/alerts'
+      preLoaderRoute: typeof AppAlertsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/billing': {
+      id: '/app/billing'
+      path: '/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/competitors': {
       id: '/app/competitors'
       path: '/competitors'
@@ -197,6 +261,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/r/$token': {
+      id: '/r/$token'
+      path: '/r/$token'
+      fullPath: '/r/$token'
+      preLoaderRoute: typeof RTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/audit/$id': {
       id: '/app/audit/$id'
       path: '/audit/$id'
@@ -208,6 +286,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAlertsRoute: typeof AppAlertsRoute
+  AppBillingRoute: typeof AppBillingRoute
   AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppMentionsRoute: typeof AppMentionsRoute
   AppOptimizeRoute: typeof AppOptimizeRoute
@@ -217,6 +297,8 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAlertsRoute: AppAlertsRoute,
+  AppBillingRoute: AppBillingRoute,
   AppCompetitorsRoute: AppCompetitorsRoute,
   AppMentionsRoute: AppMentionsRoute,
   AppOptimizeRoute: AppOptimizeRoute,
@@ -231,6 +313,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  RTokenRoute: RTokenRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

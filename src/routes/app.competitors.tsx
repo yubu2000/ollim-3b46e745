@@ -129,9 +129,19 @@ function CompetitorsPage() {
   if (!project) return <p className="text-sm text-muted-foreground">먼저 프로젝트를 만들어 주세요.</p>;
 
   // latest audit per label
-  const latest = new Map<string, (typeof audits.data extends (infer T)[] ? T : never)>();
-  for (const row of audits.data ?? []) if (!latest.has(row.label)) latest.set(row.label, row);
+  type AuditRow = {
+    id: string;
+    label: string;
+    is_self: boolean;
+    seo_score: number;
+    geo_score: number;
+    items: unknown;
+  };
+  const latest = new Map<string, AuditRow>();
+  for (const row of (audits.data ?? []) as AuditRow[])
+    if (!latest.has(row.label)) latest.set(row.label, row);
   const rows = [...latest.values()].sort((a, b) => Number(b.is_self) - Number(a.is_self));
+
 
   const scoreData = rows.map((r) => ({ name: r.label, SEO: r.seo_score, GEO: r.geo_score }));
 
