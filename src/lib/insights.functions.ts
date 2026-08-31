@@ -277,3 +277,48 @@ export const publishArticleToWordPress = createServerFn({ method: "POST" })
     });
   });
 
+/** Fetch a published URL and check it is live with canonical + valid JSON-LD. */
+export const verifyPublishedUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ url: z.string().min(4), expectTitle: z.string().optional() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { verifyPublishedPage } = await import("./publish-verify.server");
+    return await verifyPublishedPage(data.url, data.expectTitle ? { expectTitle: data.expectTitle } : {});
+  });
+
+/** Auto-generate FAQ/Article/Organization JSON-LD from a page and validate it. */
+export const generateSchemas = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ auditId: z.string().uuid().optional(), url: z.string().min(4).optional() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { generateSchemasForUrl } = await import("./schema.server");
+    let url = data.url ?? "";
+    let brand = "";
+    let siteUrl = "";
+
+    if (data.auditId) {
+      const { data: audit } = await context.supabase
+        .from("audits")
+        .select("target_url, project_id")
+        .eq("id", data.auditId)
+        .maybeSingle();
+      if (!audit) throw new Error("진단을 찾을 수 없습니다.");
+      url = url || audit.target_url;
+      const { data: project } = await context.supabase
+        .from("projects")
+        .select("brand_name, site_url")
+        .eq("id", audit.project_id)
+        .maybeSingle();
+      brand = project?.brand_name ?? "";
+      siteUrl = project?.site_url ?? "";
+    }
+
+    if (!url) throw new Error("검사할 주소가 없습니다.");
+    return await generateSchemasForUrl({ url, brand, siteUrl });
+  });
+
+
