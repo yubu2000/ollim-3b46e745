@@ -13,6 +13,8 @@ import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
 import { FIX_GUIDES } from "@/lib/fix-guides";
 import { SchemaStudio } from "@/components/SchemaStudio";
 import { PublishVerifier } from "@/components/PublishVerifier";
+import { PublishVerificationHistory } from "@/components/PublishVerificationHistory";
+
 
 
 export const Route = createFileRoute("/app/audit/$id")({
