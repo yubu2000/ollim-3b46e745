@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/lib/project-context";
 import { optimizeContent } from "@/lib/geo.functions";
 import { publishArticleToWordPress } from "@/lib/insights.functions";
+import { WordPressSettings } from "@/components/WordPressSettings";
+
 
 export const Route = createFileRoute("/app/optimize")({
   component: OptimizePage,
