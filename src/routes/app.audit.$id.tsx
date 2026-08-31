@@ -11,6 +11,9 @@ import { ScoreRing } from "@/components/ScoreRing";
 import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
 import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
 import { FIX_GUIDES } from "@/lib/fix-guides";
+import { SchemaStudio } from "@/components/SchemaStudio";
+import { PublishVerifier } from "@/components/PublishVerifier";
+
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
