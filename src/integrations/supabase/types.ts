@@ -425,6 +425,7 @@ export type Database = {
       }
       plan_overrides: {
         Row: {
+          ai_credits: number | null
           audits: number | null
           created_at: string
           exports: boolean | null
@@ -435,6 +436,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_credits?: number | null
           audits?: number | null
           created_at?: string
           exports?: boolean | null
@@ -445,6 +447,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_credits?: number | null
           audits?: number | null
           created_at?: string
           exports?: boolean | null
