@@ -42,8 +42,12 @@ const nav = [
   { to: "/app", label: "대시보드", icon: LayoutDashboard, exact: true },
   { to: "/app/mentions", label: "LLM 언급 추적", icon: Bot, exact: false },
   { to: "/app/optimize", label: "콘텐츠 최적화", icon: Sparkles, exact: false },
+  { to: "/app/competitors", label: "경쟁사 비교", icon: Swords, exact: false },
   { to: "/app/reports", label: "리포트", icon: BarChart3, exact: false },
+  { to: "/app/alerts", label: "알림", icon: BellRing, exact: false },
+  { to: "/app/billing", label: "요금제", icon: CreditCard, exact: false },
 ] as const;
+
 
 function AppLayout() {
   const { user, loading, signOut } = useAuth();
