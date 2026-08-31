@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Copy, Download, Loader2, PenLine } from "lucide-react";
+import { Code2, Copy, Download, Loader2, PenLine, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { generateArticle } from "@/lib/insights.functions";
+import {
+  generateArticle,
+  publishArticleToWordPress,
+  renderArticleHtml,
+} from "@/lib/insights.functions";
 
 type Draft = {
   title: string;
@@ -41,7 +45,10 @@ export function ArticleWriter({
   const [open, setOpen] = useState(false);
   const [length, setLength] = useState<"short" | "medium" | "long">("medium");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [html, setHtml] = useState<string | null>(null);
   const fn = useServerFn(generateArticle);
+  const renderFn = useServerFn(renderArticleHtml);
+  const publishFn = useServerFn(publishArticleToWordPress);
 
   const gen = useMutation({
     mutationFn: async () =>
@@ -50,7 +57,52 @@ export function ArticleWriter({
       })) as unknown as Draft,
     onSuccess: (d) => {
       setDraft(d);
+      setHtml(null);
       toast.success("글 초안을 생성했습니다.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toHtml = useMutation({
+    mutationFn: async () => {
+      if (!draft) throw new Error("먼저 초안을 생성해 주세요.");
+      const res = (await renderFn({
+        data: {
+          title: draft.title,
+          markdown: draft.markdown,
+          faq: draft.faq,
+          jsonld: draft.jsonld,
+        },
+      })) as unknown as { html: string };
+      return res.html;
+    },
+    onSuccess: (h) => {
+      setHtml(h);
+      toast.success("HTML로 변환했습니다. 아래에서 복사하거나 저장하세요.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const publish = useMutation({
+    mutationFn: async (status: "draft" | "publish") => {
+      if (!draft) throw new Error("먼저 초안을 생성해 주세요.");
+      return (await publishFn({
+        data: {
+          title: draft.title,
+          markdown: draft.markdown,
+          metaDescription: draft.metaDescription,
+          faq: draft.faq,
+          jsonld: draft.jsonld,
+          status,
+        },
+      })) as unknown as { id: number | null; link: string | null; status: string };
+    },
+    onSuccess: (r) => {
+      toast.success(
+        r.status === "publish"
+          ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
+          : "WordPress에 임시글(draft)로 저장했습니다.",
+      );
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -61,14 +113,17 @@ export function ArticleWriter({
         .join("\n\n")}\n`
     : "";
 
-  function download() {
-    const blob = new Blob([fullText], { type: "text/markdown;charset=utf-8" });
+  const safeName = title.replace(/[\\/:*?"<>|]/g, "-").slice(0, 60);
+
+  function downloadFile(content: string, ext: string, mime: string) {
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${title.replace(/[\\/:*?"<>|]/g, "-").slice(0, 60)}.md`;
+    a.download = `${safeName}.${ext}`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
+
 
   return (
     <>
