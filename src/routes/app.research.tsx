@@ -40,6 +40,43 @@ function ResearchPage() {
 
   const data = research.data;
 
+  const { project } = useProjects();
+  const latestAudit = useQuery({
+    queryKey: ["latest-audit", project?.id],
+    enabled: Boolean(project),
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("audits")
+        .select("id")
+        .eq("project_id", project!.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return rows?.[0]?.id ?? null;
+    },
+  });
+
+  // 리서치 결과(주제 + 질문)를 콘텐츠 제안 카드로 자동 변환한다.
+  const contentIdeas = data
+    ? data.topics.slice(0, 4).map((t, i) => {
+        const qs = data.questions
+          .slice(i * 2, i * 2 + 3)
+          .map((q) => q.question);
+        return {
+          title: `${t.topic} — ${data.keyword} 완벽 가이드`,
+          targetKeyword: data.keyword,
+          format: "가이드",
+          outline: [
+            `${t.topic} 개요`,
+            ...(qs.length > 0 ? qs : data.questions.slice(0, 3).map((q) => q.question)),
+            "정리 및 다음 단계",
+          ],
+          description: t.description,
+        };
+      })
+    : [];
+
+
   const submit = () => {
     const kw = keyword.trim();
     if (!kw) return;
