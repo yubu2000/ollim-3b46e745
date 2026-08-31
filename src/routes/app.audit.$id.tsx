@@ -255,6 +255,50 @@ function ItemList({ title, items }: { title: string; items: Item[] }) {
                           </li>
                         ))}
                       </ol>
+                      {guide.checklist && (
+                        <div className="mt-3 rounded-md border border-border bg-background p-3">
+                          <p className="text-xs font-semibold">필수 수정 체크리스트</p>
+                          <ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+                            {guide.checklist.map((c, ci) => (
+                              <li key={ci} className="flex items-start gap-2">
+                                <span className="mt-[3px] inline-block h-3 w-3 shrink-0 rounded-[3px] border border-muted-foreground/60" />
+                                <span>{c}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {guide.example && (
+                        <div className="mt-3 grid gap-2 md:grid-cols-2">
+                          <div className="rounded-md border border-destructive/40 p-2">
+                            <p className="text-xs font-semibold text-destructive">적용 전 (문제)</p>
+                            <pre className="mt-1 overflow-x-auto text-[11px] leading-relaxed">
+                              {guide.example.before}
+                            </pre>
+                          </div>
+                          <div className="rounded-md border border-[var(--chart-2)]/40 p-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs font-semibold text-[var(--chart-2)]">적용 후 (권장)</p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 print:hidden"
+                                onClick={() => {
+                                  void navigator.clipboard.writeText(guide.example?.after ?? "");
+                                  toast.success("적용 후 예시를 복사했습니다.");
+                                }}
+                              >
+                                <Copy className="mr-1 h-3 w-3" /> 복사
+                              </Button>
+                            </div>
+                            <pre className="mt-1 overflow-x-auto text-[11px] leading-relaxed">
+                              {guide.example.after}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+
                       {guide.snippet && (
                         <div className="mt-3">
                           <div className="flex items-center justify-between gap-2">
@@ -278,6 +322,7 @@ function ItemList({ title, items }: { title: string; items: Item[] }) {
                           </pre>
                         </div>
                       )}
+
                     </div>
                   )}
                 </div>
