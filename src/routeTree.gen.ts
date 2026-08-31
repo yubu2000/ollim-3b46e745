@@ -20,6 +20,7 @@ import { Route as AppCompetitorsRouteImport } from './routes/app.competitors'
 import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppOptimizeRouteImport } from './routes/app.optimize'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
+import { Route as AppResearchRouteImport } from './routes/app.research'
 import { Route as RTokenRouteImport } from './routes/r.$token'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
@@ -80,6 +81,11 @@ const AppReportsRoute = AppReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
+const AppResearchRoute = AppResearchRouteImport.update({
+  id: '/research',
+  path: '/research',
+  getParentRoute: () => AppRoute,
+} as any)
 const RTokenRoute = RTokenRouteImport.update({
   id: '/r/$token',
   path: '/r/$token',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/app/research': typeof AppResearchRoute
   '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/app/research': typeof AppResearchRoute
   '/r/$token': typeof RTokenRoute
   '/app': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/app/research': typeof AppResearchRoute
   '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/app/research'
     | '/r/$token'
     | '/app/'
     | '/api/public/stripe-webhook'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/app/research'
     | '/r/$token'
     | '/app'
     | '/api/public/stripe-webhook'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/app/research'
     | '/r/$token'
     | '/app/'
     | '/api/public/stripe-webhook'
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/research': {
+      id: '/app/research'
+      path: '/research'
+      fullPath: '/app/research'
+      preLoaderRoute: typeof AppResearchRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/r/$token': {
       id: '/r/$token'
       path: '/r/$token'
@@ -332,6 +351,7 @@ interface AppRouteChildren {
   AppMentionsRoute: typeof AppMentionsRoute
   AppOptimizeRoute: typeof AppOptimizeRoute
   AppReportsRoute: typeof AppReportsRoute
+  AppResearchRoute: typeof AppResearchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAuditIdRoute: typeof AppAuditIdRoute
 }
@@ -344,6 +364,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMentionsRoute: AppMentionsRoute,
   AppOptimizeRoute: AppOptimizeRoute,
   AppReportsRoute: AppReportsRoute,
+  AppResearchRoute: AppResearchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAuditIdRoute: AppAuditIdRoute,
 }
