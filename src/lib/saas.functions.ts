@@ -70,6 +70,7 @@ export const runCompetitorCompare = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ projectId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { fetchPage, runChecks, score } = await import("./geo-engine.server");
+    const { computeSiteMetrics } = await import("./site-metrics.server");
     const { assertQuota, consume } = await import("./billing.server");
     const { supabase, userId } = context;
 
@@ -108,6 +109,7 @@ export const runCompetitorCompare = createServerFn({ method: "POST" })
           seo_score: score(items, "SEO"),
           geo_score: score(items, "GEO"),
           items: items as unknown as Record<string, unknown>[],
+          metrics: computeSiteMetrics(url, html) as unknown as Record<string, unknown>,
           error: null as string | null,
         });
       } catch (error) {
@@ -121,6 +123,7 @@ export const runCompetitorCompare = createServerFn({ method: "POST" })
           seo_score: 0,
           geo_score: 0,
           items: [],
+          metrics: {},
           error: error instanceof Error ? error.message : "진단 실패",
         });
       }
