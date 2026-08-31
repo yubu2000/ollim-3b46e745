@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
 import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
+import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
@@ -198,6 +199,8 @@ function AuditDetail() {
           </CardContent>
         </Card>
       )}
+
+      <KeywordSuggestionsCard auditId={id} />
 
       <ItemList title="GEO 항목 (AI 답변 인용 최적화)" items={geo} />
       <ItemList title="SEO 항목 (검색엔진 최적화)" items={seo} />
