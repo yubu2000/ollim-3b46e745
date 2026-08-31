@@ -18,6 +18,9 @@ export const runAudit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertQuota, consume } = await import("./billing.server");
+    const { checkAuditAlert } = await import("./alerts.server");
+    await assertQuota(userId, "audit");
 
     const { data: project, error: projectError } = await supabase
       .from("projects")
@@ -32,6 +35,7 @@ export const runAudit = createServerFn({ method: "POST" })
     const seo = score(items, "SEO");
     const geo = score(items, "GEO");
     const summary = await summarize(url, items, project.brand_name);
+
 
     const { data: audit, error } = await supabase
       .from("audits")
