@@ -282,7 +282,85 @@ function CompetitorsPage() {
         </CardContent>
       </Card>
 
+      {hasMetrics && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">세부 지표 (콘텐츠 길이 · 링크 빈도)</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="py-2 pr-4 font-medium">지표</th>
+                  {metricRows.map(({ row }) => (
+                    <th key={row.id} className="px-2 py-2 font-medium">{row.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metricDefs.map((def) => {
+                  const values = metricRows.map(({ m }) => (m[def.key] as number | undefined) ?? null);
+                  const best = Math.max(...values.map((v) => v ?? 0));
+                  return (
+                    <tr key={def.key} className="border-b border-border/60">
+                      <td className="py-2 pr-4">{def.label}</td>
+                      {values.map((v, i) => (
+                        <td
+                          key={metricRows[i]!.row.id}
+                          className={`px-2 py-2 ${v !== null && v === best && best > 0 ? "font-semibold text-primary" : ""}`}
+                        >
+                          {v === null ? "—" : `${v.toLocaleString("ko-KR")}${def.suffix ?? ""}`}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasMetrics && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">도메인별 키워드 랭킹 (본문 빈도 기준)</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {metricRows.map(({ row, m }) => (
+              <div key={row.id} className="rounded-lg border border-border p-4">
+                <p className="mb-3 text-sm font-semibold">
+                  {row.label}
+                  {row.is_self && <Badge className="ml-2">내 사이트</Badge>}
+                </p>
+                {(m.keywords ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">키워드를 추출하지 못했습니다.</p>
+                ) : (
+                  <ol className="space-y-1 text-sm">
+                    {(m.keywords ?? []).map((k, idx) => (
+                      <li key={k.term} className="flex items-center justify-between gap-2">
+                        <span className="truncate">
+                          <span className="mr-2 text-muted-foreground">{idx + 1}.</span>
+                          {k.term}
+                          {k.inTitle && (
+                            <Badge variant="secondary" className="ml-2">제목</Badge>
+                          )}
+                        </span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {k.count}회 · {k.density}%
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {checkTitles.length > 0 && (
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">항목별 비교</CardTitle>
