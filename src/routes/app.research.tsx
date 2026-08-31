@@ -239,7 +239,7 @@ function ResearchPage() {
                         ))}
                       </ul>
                       <ArticleWriter
-                        auditId={latestAudit.data}
+                        auditId={latestAudit.data as string}
                         title={c.title}
                         targetKeyword={c.targetKeyword}
                         format={c.format}
