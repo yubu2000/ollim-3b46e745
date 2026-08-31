@@ -45,7 +45,9 @@ export function ArticleWriter({
   const [open, setOpen] = useState(false);
   const [length, setLength] = useState<"short" | "medium" | "long">("medium");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [publishedUrl, setPublishedUrl] = useState<string>("");
   const [html, setHtml] = useState<string | null>(null);
+
   const fn = useServerFn(generateArticle);
   const renderFn = useServerFn(renderArticleHtml);
   const publishFn = useServerFn(publishArticleToWordPress);
