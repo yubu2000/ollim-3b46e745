@@ -204,3 +204,76 @@ export const deleteArticle = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Render a draft as standalone HTML for manual pasting into a CMS. */
+export const renderArticleHtml = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        title: z.string().min(1),
+        markdown: z.string().default(""),
+        faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
+        jsonld: z.string().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { articleToHtml } = await import("./wordpress.server");
+    let ld: unknown = undefined;
+    if (data.jsonld) {
+      try {
+        ld = JSON.parse(data.jsonld);
+      } catch {
+        ld = undefined;
+      }
+    }
+    return {
+      html: articleToHtml({
+        title: data.title,
+        markdown: data.markdown,
+        faq: data.faq,
+        ...(ld ? { jsonld: ld } : {}),
+      }),
+    };
+  });
+
+/** Publish a generated draft to the connected WordPress blog. */
+export const publishArticleToWordPress = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        title: z.string().min(1),
+        markdown: z.string().default(""),
+        metaDescription: z.string().default(""),
+        faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
+        jsonld: z.string().optional(),
+        status: z.enum(["draft", "publish"]).default("draft"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { articleToHtml, publishPost } = await import("./wordpress.server");
+    let ld: unknown = undefined;
+    if (data.jsonld) {
+      try {
+        ld = JSON.parse(data.jsonld);
+      } catch {
+        ld = undefined;
+      }
+    }
+    const contentHtml = articleToHtml({
+      title: data.title,
+      markdown: data.markdown,
+      faq: data.faq,
+      ...(ld ? { jsonld: ld } : {}),
+    });
+    return await publishPost({
+      title: data.title,
+      contentHtml,
+      excerpt: data.metaDescription,
+      status: data.status,
+    });
+  });
+
