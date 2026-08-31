@@ -41,6 +41,41 @@ function AuditDetail() {
     },
   });
 
+  const queryClient = useQueryClient();
+  const share = useServerFn(createShareLink);
+  const revoke = useServerFn(revokeShareLink);
+
+  const links = useQuery({
+    queryKey: ["share-links", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shared_reports")
+        .select("*")
+        .eq("audit_id", id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const createLink = useMutation({
+    mutationFn: async () => share({ data: { auditId: id, days: 30 } }),
+    onSuccess: () => {
+      toast.success("공유 링크를 만들었습니다. (30일 유효)");
+      queryClient.invalidateQueries({ queryKey: ["share-links", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const revokeLink = useMutation({
+    mutationFn: async (linkId: string) => revoke({ data: { id: linkId } }),
+    onSuccess: () => {
+      toast.success("공유 링크를 해제했습니다.");
+      queryClient.invalidateQueries({ queryKey: ["share-links", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <p className="text-sm text-muted-foreground">불러오는 중…</p>;
   if (!data) return <p className="text-sm text-muted-foreground">진단을 찾을 수 없습니다.</p>;
 
@@ -53,10 +88,75 @@ function AuditDetail() {
         <ArrowLeft className="h-4 w-4" /> 대시보드
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">진단 리포트</h1>
-        <p className="break-all text-sm text-muted-foreground">{data.audit.target_url}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">진단 리포트</h1>
+          <p className="break-all text-sm text-muted-foreground">{data.audit.target_url}</p>
+        </div>
+        <div className="flex gap-2 print:hidden">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="mr-1 h-4 w-4" /> PDF 저장
+          </Button>
+          <Button size="sm" onClick={() => createLink.mutate()} disabled={createLink.isPending}>
+            {createLink.isPending ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Link2 className="mr-1 h-4 w-4" />
+            )}
+            공유 링크 생성
+          </Button>
+        </div>
       </div>
+
+      {(links.data ?? []).length > 0 && (
+        <Card className="print:hidden">
+          <CardHeader>
+            <CardTitle className="text-base">공유 링크</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(links.data ?? []).map((l) => {
+              const url = `${typeof window === "undefined" ? "" : window.location.origin}/r/${l.token}`;
+              return (
+                <div
+                  key={l.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-4 py-2 text-sm"
+                >
+                  <span className="min-w-0 flex-1 truncate">{url}</span>
+                  <span className="flex items-center gap-2">
+                    {l.revoked ? (
+                      <Badge variant="secondary">해제됨</Badge>
+                    ) : (
+                      <Badge>
+                        {l.expires_at
+                          ? `${new Date(l.expires_at).toLocaleDateString("ko-KR")}까지`
+                          : "무기한"}
+                      </Badge>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="링크 복사"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(url);
+                        toast.success("링크를 복사했습니다.");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    {!l.revoked && (
+                      <Button variant="outline" size="sm" onClick={() => revokeLink.mutate(l.id)}>
+                        해제
+                      </Button>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
