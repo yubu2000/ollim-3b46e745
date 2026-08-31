@@ -167,7 +167,15 @@ export const runMentionCheck = createServerFn({ method: "POST" })
     const { error } = await supabase.from("mention_runs").insert(rows as never);
     if (error) throw new Error(error.message);
 
+    await consume(userId, "mention");
+    const currentRate =
+      rows.length === 0
+        ? 0
+        : Math.round((rows.filter((r) => r["mentioned"] === true).length / rows.length) * 100);
+    await checkMentionAlert(project.id, project.name, currentRate, previousRate);
+
     return { runs: rows.length };
+
   });
 
 export const optimizeContent = createServerFn({ method: "POST" })
