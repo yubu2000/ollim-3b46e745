@@ -53,8 +53,12 @@ function BillingPage() {
   });
 
   const current = (billing.data?.plan ?? "free") as PlanId;
-  const usage = billing.data?.usage ?? { audit: 0, mention: 0 };
-  const limits = billing.data?.limits ?? { audit: PLANS.free.audits, mention: PLANS.free.mentions };
+  const usage = billing.data?.usage ?? { audit: 0, mention: 0, ai: 0 };
+  const limits = billing.data?.limits ?? {
+    audit: PLANS.free.audits,
+    mention: PLANS.free.mentions,
+    ai: PLANS.free.aiCredits,
+  };
 
   return (
     <div className="space-y-6">
@@ -76,9 +80,15 @@ function BillingPage() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="grid gap-6 sm:grid-cols-2">
-          <UsageBar label="이번 달 진단" used={usage.audit} limit={limits.audit} />
-          <UsageBar label="이번 달 멘션 체크" used={usage.mention} limit={limits.mention} />
+        <CardContent className="space-y-6">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <UsageBar label="이번 달 진단" used={usage.audit} limit={limits.audit} />
+            <UsageBar label="이번 달 멘션 체크" used={usage.mention} limit={limits.mention} />
+          </div>
+          <UsageBar label="이번 달 AI 크레딧" used={usage.ai} limit={limits.ai} unit="크레딧" />
+          <p className="text-xs text-muted-foreground">
+            AI 크레딧 소모: 키워드 리서치 1 · 콘텐츠 최적화 2 · 후속 제안 2 · 글 초안 3 · 이미지 생성 4
+          </p>
         </CardContent>
       </Card>
 
@@ -128,14 +138,25 @@ function BillingPage() {
   );
 }
 
-function UsageBar({ label, used, limit }: { label: string; used: number; limit: number }) {
+function UsageBar({
+  label,
+  used,
+  limit,
+  unit = "회",
+}: {
+  label: string;
+  used: number;
+  limit: number;
+  unit?: string;
+}) {
   const pct = limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span>{label}</span>
         <span className="text-muted-foreground">
-          {used} / {limit}회
+          {used} / {limit}
+          {unit}
         </span>
       </div>
       <Progress value={pct} />

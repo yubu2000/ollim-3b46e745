@@ -189,7 +189,10 @@ export const optimizeContent = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { assertQuota, consume } = await import("./billing.server");
+    const { AI_COST } = await import("./plans");
+    await assertQuota(context.userId, "ai", AI_COST.optimize);
     const prompt = `너는 GEO(생성형 엔진 최적화) 전문 에디터다.
 브랜드: ${data.brand}
 주제: ${data.topic}
@@ -214,6 +217,7 @@ ${data.content.slice(0, 6000)}
       const re = new RegExp(`===${name}===([\\s\\S]*?)(?====|$)`);
       return raw.match(re)?.[1]?.trim() ?? "";
     };
+    await consume(context.userId, "ai", AI_COST.optimize);
     return {
       rewrite: part("REWRITE") || raw,
       faq: part("FAQ"),

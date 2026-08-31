@@ -14,6 +14,7 @@ import { FIX_GUIDES } from "@/lib/fix-guides";
 import { SchemaStudio } from "@/components/SchemaStudio";
 import { PublishVerifier } from "@/components/PublishVerifier";
 import { PublishVerificationHistory } from "@/components/PublishVerificationHistory";
+import { VerifiedContentSuggestions } from "@/components/VerifiedContentSuggestions";
 
 
 
@@ -221,6 +222,8 @@ function AuditDetail() {
           <PublishVerificationHistory auditId={id} />
         </CardContent>
       </Card>
+
+      <VerifiedContentSuggestions auditId={id} />
 
 
 

@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_overrides ADD COLUMN IF NOT EXISTS ai_credits integer;

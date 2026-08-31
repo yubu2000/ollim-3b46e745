@@ -11,7 +11,7 @@ export const getBilling = createServerFn({ method: "POST" })
     return {
       plan,
       usage,
-      limits: { audit: limits.audit, mention: limits.mention },
+      limits: { audit: limits.audit, mention: limits.mention, ai: limits.ai },
       overridden: limits.overridden,
       exports: limits.exports,
       stripeReady: Boolean(process.env["STRIPE_SECRET_KEY"]),
