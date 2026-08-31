@@ -90,6 +90,30 @@ export function SearchConsoleCard({ projectId }: { projectId: string }) {
     return () => clearInterval(id);
   }, [autoRefreshOn, projectId]);
 
+  // 스냅샷이 갱신되는 즉시 대시보드에 반영한다(실시간 구독).
+  useEffect(() => {
+    const channel = supabase
+      .channel(`gsc-snapshot-${projectId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "search_console_snapshots",
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          void qc.invalidateQueries({ queryKey: ["gsc-snapshot", projectId] });
+          void qc.invalidateQueries({ queryKey: ["keyword-suggestions"] });
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [projectId, qc]);
+
+
   const options = properties.data
     ? properties.data.matches.length > 0
       ? properties.data.matches
