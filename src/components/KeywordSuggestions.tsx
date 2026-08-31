@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArticleWriter } from "@/components/ArticleWriter";
 import { getKeywordSuggestions } from "@/lib/insights.functions";
 
 type KeywordIdea = {
@@ -153,6 +154,13 @@ export function KeywordSuggestionsCard({ auditId }: { auditId: string }) {
                       <li key={i}>{i + 1}. {o}</li>
                     ))}
                   </ul>
+                  <ArticleWriter
+                    auditId={auditId}
+                    title={c.title}
+                    targetKeyword={c.targetKeyword}
+                    format={c.format}
+                    outline={c.outline}
+                  />
                 </div>
               ))}
             </div>
