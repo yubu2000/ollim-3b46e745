@@ -1,16 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, HelpCircle, Loader2, Search, Tags } from "lucide-react";
+import { Bot, HelpCircle, Lightbulb, Loader2, Search, Tags } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ArticleWriter } from "@/components/ArticleWriter";
+import { supabase } from "@/integrations/supabase/client";
+import { useProjects } from "@/lib/project-context";
 import { getKeywordResearch } from "@/lib/research.functions";
 import type { KeywordResearch } from "@/lib/research.server";
+
 
 export const Route = createFileRoute("/app/research")({
   head: () => ({
