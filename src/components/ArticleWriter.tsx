@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { PublishVerifier } from "@/components/PublishVerifier";
+
 import {
   generateArticle,
   publishArticleToWordPress,
@@ -45,7 +47,9 @@ export function ArticleWriter({
   const [open, setOpen] = useState(false);
   const [length, setLength] = useState<"short" | "medium" | "long">("medium");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [publishedUrl, setPublishedUrl] = useState<string>("");
   const [html, setHtml] = useState<string | null>(null);
+
   const fn = useServerFn(generateArticle);
   const renderFn = useServerFn(renderArticleHtml);
   const publishFn = useServerFn(publishArticleToWordPress);
@@ -98,6 +102,7 @@ export function ArticleWriter({
       })) as unknown as { id: number | null; link: string | null; status: string };
     },
     onSuccess: (r) => {
+      if (r.link) setPublishedUrl(r.link);
       toast.success(
         r.status === "publish"
           ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
@@ -106,6 +111,7 @@ export function ArticleWriter({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const fullText = draft
     ? `# ${draft.title}\n\n${draft.markdown}\n\n## 자주 묻는 질문\n\n${draft.faq
@@ -274,6 +280,14 @@ export function ArticleWriter({
                   />
                 </div>
               )}
+
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-sm font-medium">게시 검증</p>
+                <p className="mb-2 mt-1 text-xs text-muted-foreground">
+                  게시한 글이 실제로 열리는지, 최종 HTML에 canonical과 JSON-LD가 포함됐는지 확인합니다.
+                </p>
+                <PublishVerifier defaultUrl={publishedUrl} expectTitle={draft.title} compact />
+              </div>
 
 
               <details className="rounded-lg border border-border p-3 text-sm">

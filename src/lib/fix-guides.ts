@@ -3,6 +3,10 @@ export type FixGuide = {
   why: string;
   steps: string[];
   snippet?: string;
+  /** 배포 전에 하나씩 확인할 필수 수정 체크리스트 */
+  checklist?: string[];
+  /** 적용 전/후 비교 예시 */
+  example?: { before: string; after: string };
 };
 
 export const FIX_GUIDES: Record<string, FixGuide> = {
@@ -14,6 +18,24 @@ export const FIX_GUIDES: Record<string, FixGuide> = {
       "목록 페이지의 ?page=2 같은 파라미터 페이지도 자기 자신을 canonical로 지정합니다.",
       "http → https, www 유무 중 하나로 301 리다이렉트를 통일하면 효과가 더 큽니다.",
     ],
+    checklist: [
+      "모든 페이지 <head>에 canonical 태그가 1개만 있다 (중복 금지)",
+      "href 가 상대경로가 아닌 절대 URL이다",
+      "canonical 주소로 접속했을 때 200으로 열린다 (리다이렉트·404 아님)",
+      "페이지마다 canonical 값이 서로 다르다 (전 페이지 홈 주소 금지)",
+      "파라미터/페이지네이션 주소도 자기 자신을 가리킨다",
+      "적용 후 리포트의 ‘게시 검증’으로 canonical 포함 여부를 재확인했다",
+    ],
+    example: {
+      before: `<head>
+  <title>중고차 사고이력 조회 | 무사고닷컴</title>
+  <!-- canonical 없음 → /, /index.jsp, /?utm_source=... 가 전부 다른 페이지로 인식됨 -->
+</head>`,
+      after: `<head>
+  <title>중고차 사고이력 조회 | 무사고닷컴</title>
+  <link rel="canonical" href="http://mu4go.com/" />
+</head>`,
+    },
     snippet: `<link rel="canonical" href="http://mu4go.com/현재-페이지-경로" />`,
   },
   "구조화 데이터(JSON-LD)": {
@@ -22,8 +44,33 @@ export const FIX_GUIDES: Record<string, FixGuide> = {
       "홈에는 Organization(또는 LocalBusiness), 서비스 페이지에는 Service, 글에는 Article 스키마를 넣습니다.",
       "<head> 마지막이나 </body> 직전에 <script type=\"application/ld+json\"> 블록으로 붙입니다.",
       "실제 사업자 정보와 100% 일치시키고, 화면에 없는 정보는 넣지 않습니다.",
-      "적용 후 Google Rich Results Test로 오류가 없는지 확인합니다.",
+      "이 리포트의 ‘스키마 자동 생성·유효성 검사’ 카드에서 만든 코드를 그대로 붙여넣으면 가장 빠릅니다.",
     ],
+    checklist: [
+      "script 태그의 type 이 정확히 application/ld+json 이다",
+      "\"@context\": \"https://schema.org\" 와 \"@type\" 이 모두 있다",
+      "필수 항목이 채워져 있다 (Organization: name·url / Article: headline·author·datePublished)",
+      "url·logo 같은 주소 값이 절대 URL이다",
+      "JSON 문법 오류가 없다 (마지막 쉼표, 따옴표 누락 금지)",
+      "스키마 내용이 화면에 실제로 보이는 정보와 일치한다",
+      "리포트의 스키마 유효성 검사에서 오류 0건으로 나온다",
+    ],
+    example: {
+      before: `<!-- 구조화 데이터 없음: 크롤러와 LLM이 업체명·서비스·연락처를 문장에서 추측해야 함 -->
+<footer>무사고닷컴 | 문의 00-0000-0000</footer>`,
+      after: `<footer>무사고닷컴 | 문의 00-0000-0000</footer>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "무사고닷컴",
+  "url": "http://mu4go.com",
+  "description": "차량번호로 중고차 사고이력·성능점검을 조회하는 서비스",
+  "telephone": "+82-00-0000-0000",
+  "areaServed": "KR"
+}
+</script>`,
+    },
     snippet: `<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -43,6 +90,31 @@ export const FIX_GUIDES: Record<string, FixGuide> = {
       "본문에 보이는 질문/답변과 동일한 내용을 FAQPage JSON-LD로 넣습니다.",
       "답변은 2~3문장, 결론 문장을 맨 앞에 둡니다.",
     ],
+    checklist: [
+      "질문이 본문 화면에도 실제로 보인다 (스키마에만 있는 질문 금지)",
+      "질문 4개 이상, 각 답변 2문장 이상",
+      "각 Question 에 name 과 acceptedAnswer.text 가 모두 있다",
+      "acceptedAnswer 의 @type 이 \"Answer\" 다",
+      "한 페이지에 FAQPage 블록은 1개만 둔다",
+      "광고성 문구·가격 오기재가 없다 (실제 정책과 일치)",
+    ],
+    example: {
+      before: `<h2>안내</h2>
+<p>조회는 간편하고 빠릅니다.</p>`,
+      after: `<h2>사고이력 조회는 얼마나 걸리나요?</h2>
+<p>차량번호 입력 후 보통 1분 이내에 결과를 확인할 수 있습니다.</p>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "사고이력 조회는 얼마나 걸리나요?",
+    "acceptedAnswer": { "@type": "Answer", "text": "차량번호 입력 후 보통 1분 이내에 결과를 확인할 수 있습니다." }
+  }]
+}
+</script>`,
+    },
     snippet: `<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -55,6 +127,7 @@ export const FIX_GUIDES: Record<string, FixGuide> = {
 }
 </script>`,
   },
+
   "질문형 소제목": {
     why: "LLM은 사용자의 질문과 문서의 소제목을 매칭해 답변을 만듭니다. 질문형 H2가 많을수록 인용 확률이 올라갑니다.",
     steps: [
