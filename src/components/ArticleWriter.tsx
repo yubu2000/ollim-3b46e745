@@ -63,10 +63,45 @@ export function ArticleWriter({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string>("");
   const [html, setHtml] = useState<string | null>(null);
+  const [images, setImages] = useState<ArticleImage[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const fn = useServerFn(generateArticle);
   const renderFn = useServerFn(renderArticleHtml);
   const publishFn = useServerFn(publishArticleToWordPress);
+  const imageFn = useServerFn(createArticleImage);
+
+  const makeImage = useMutation({
+    mutationFn: async () =>
+      (await imageFn({
+        data: { prompt: `${title} / 핵심 키워드: ${targetKeyword}` },
+      })) as unknown as { dataUrl: string },
+    onSuccess: (r) => {
+      setImages((prev) => [
+        ...prev,
+        { dataUrl: r.dataUrl, alt: title, filename: `ai-${prev.length + 1}` },
+      ]);
+      toast.success("이미지를 생성했습니다.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  async function addFiles(files: FileList | null) {
+    if (!files) return;
+    for (const file of Array.from(files).slice(0, 5)) {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("이미지를 읽지 못했습니다."));
+        reader.readAsDataURL(file);
+      });
+      setImages((prev) => [
+        ...prev,
+        { dataUrl, alt: title, filename: file.name.replace(/\.[^.]+$/, "") },
+      ]);
+    }
+  }
+
 
   const gen = useMutation({
     mutationFn: async () =>
