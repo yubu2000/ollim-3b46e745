@@ -81,6 +81,9 @@ export const runMentionCheck = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertQuota, consume } = await import("./billing.server");
+    const { checkMentionAlert } = await import("./alerts.server");
+    await assertQuota(userId, "mention");
 
     const { data: project } = await supabase
       .from("projects")
@@ -96,7 +99,29 @@ export const runMentionCheck = createServerFn({ method: "POST" })
     if (!prompts || prompts.length === 0)
       throw new Error("추적할 질문을 먼저 추가해 주세요.");
 
+    const { data: rivalSites } = await supabase
+      .from("competitor_sites")
+      .select("name")
+      .eq("project_id", project.id);
+    const rivals = [
+      ...(project.competitors ?? []),
+      ...(rivalSites ?? []).map((r) => r.name),
+    ].filter((v, i, arr) => v && arr.indexOf(v) === i);
+
+    const { data: previous } = await supabase
+      .from("mention_runs")
+      .select("mentioned, created_at")
+      .eq("project_id", project.id)
+      .order("created_at", { ascending: false })
+      .limit(prompts.length * MENTION_MODELS.length);
+    const previousRate =
+      previous && previous.length > 0
+        ? Math.round((previous.filter((p) => p.mentioned).length / previous.length) * 100)
+        : null;
+
     const rows: Record<string, unknown>[] = [];
+
+
 
     for (const prompt of prompts) {
       for (const model of MENTION_MODELS) {
