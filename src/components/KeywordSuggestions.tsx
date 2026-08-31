@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Lightbulb, Loader2, RefreshCw, Sparkles } from "lucide-react";
@@ -6,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArticleWriter } from "@/components/ArticleWriter";
+import { supabase } from "@/integrations/supabase/client";
 import { getKeywordSuggestions } from "@/lib/insights.functions";
+
 
 type KeywordIdea = {
   keyword: string;
@@ -50,7 +53,38 @@ export function KeywordSuggestionsCard({ auditId }: { auditId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // GSC 상위 검색어가 채워지면 제안 카드를 자동으로 한 번 재생성한다.
+  const gsc = useQuery({
+    queryKey: ["gsc-queries-for-audit", auditId],
+    refetchInterval: 30 * 60_000,
+    queryFn: async () => {
+      const { data: audit } = await supabase
+        .from("audits")
+        .select("project_id")
+        .eq("id", auditId)
+        .maybeSingle();
+      if (!audit) return 0;
+      const { data: snap } = await supabase
+        .from("search_console_snapshots")
+        .select("top_queries")
+        .eq("project_id", audit.project_id)
+        .maybeSingle();
+      return Array.isArray(snap?.top_queries) ? (snap.top_queries as unknown[]).length : 0;
+    },
+  });
+
+  const autoDone = useRef(false);
   const data = query.data;
+
+  useEffect(() => {
+    if (autoDone.current) return;
+    if (!data || query.isLoading) return;
+    if ((gsc.data ?? 0) > 0 && !data.usedSearchConsole && !refresh.isPending) {
+      autoDone.current = true;
+      refresh.mutate();
+    }
+  }, [gsc.data, data, query.isLoading, refresh]);
+
 
   return (
     <Card>

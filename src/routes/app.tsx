@@ -4,19 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
-  BellRing,
   Bot,
-  CreditCard,
+  ChevronDown,
   LayoutDashboard,
   LogOut,
-  Search,
   ShieldCheck,
   Sparkles,
-  Swords,
   TrendingUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -27,6 +30,10 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { ProjectProvider, useProjects } from "@/lib/project-context";
 import { getAdminStatus } from "@/lib/admin.functions";
+
+const navLinkClass =
+  "flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary outline-none";
+
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -43,16 +50,37 @@ export const Route = createFileRoute("/app")({
   component: AppLayout,
 });
 
-const nav = [
-  { to: "/app", label: "대시보드", icon: LayoutDashboard, exact: true },
-  { to: "/app/research", label: "키워드 리서치", icon: Search, exact: false },
-  { to: "/app/mentions", label: "LLM 언급 추적", icon: Bot, exact: false },
-  { to: "/app/optimize", label: "콘텐츠 최적화", icon: Sparkles, exact: false },
-  { to: "/app/competitors", label: "경쟁사 비교", icon: Swords, exact: false },
-  { to: "/app/reports", label: "리포트", icon: BarChart3, exact: false },
-  { to: "/app/alerts", label: "알림", icon: BellRing, exact: false },
-  { to: "/app/billing", label: "요금제", icon: CreditCard, exact: false },
-] as const;
+type NavItem = { to: string; label: string; exact: boolean };
+type NavGroup = { label: string; icon: typeof LayoutDashboard; items: NavItem[] };
+
+const navGroups: NavGroup[] = [
+  {
+    label: "콘텐츠 · 키워드",
+    icon: Sparkles,
+    items: [
+      { to: "/app/research", label: "키워드 리서치", exact: false },
+      { to: "/app/optimize", label: "콘텐츠 최적화", exact: false },
+    ],
+  },
+  {
+    label: "모니터링",
+    icon: Bot,
+    items: [
+      { to: "/app/mentions", label: "LLM 언급 추적", exact: false },
+      { to: "/app/competitors", label: "경쟁사 비교", exact: false },
+      { to: "/app/alerts", label: "알림", exact: false },
+    ],
+  },
+  {
+    label: "리포트 · 계정",
+    icon: BarChart3,
+    items: [
+      { to: "/app/reports", label: "리포트", exact: false },
+      { to: "/app/billing", label: "요금제", exact: false },
+    ],
+  },
+];
+
 
 
 function AppLayout() {
@@ -97,25 +125,52 @@ function AppLayout() {
               </Button>
             </div>
           </div>
-          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2">
-            {[
-              ...nav,
-              ...(adminStatus.data?.admin
-                ? [{ to: "/app/admin", label: "마스터 관리자", icon: ShieldCheck, exact: false } as const]
-                : []),
-            ].map((n) => (
+          <nav className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-3 pb-2">
+            <Link
+              to="/app"
+              activeOptions={{ exact: true }}
+              className={navLinkClass}
+              activeProps={{ className: "bg-accent text-accent-foreground font-medium" }}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              대시보드
+            </Link>
+
+            {navGroups.map((group) => (
+              <DropdownMenu key={group.label}>
+                <DropdownMenuTrigger className={navLinkClass}>
+                  <group.icon className="h-4 w-4" />
+                  {group.label}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  {group.items.map((item) => (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link
+                        to={item.to}
+                        activeOptions={{ exact: item.exact }}
+                        activeProps={{ className: "font-medium text-accent-foreground" }}
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ))}
+
+            {adminStatus.data?.admin && (
               <Link
-                key={n.to}
-                to={n.to}
-                activeOptions={{ exact: n.exact }}
-                className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary"
+                to="/app/admin"
+                className={navLinkClass}
                 activeProps={{ className: "bg-accent text-accent-foreground font-medium" }}
               >
-                <n.icon className="h-4 w-4" />
-                {n.label}
+                <ShieldCheck className="h-4 w-4" />
+                마스터 관리자
               </Link>
-            ))}
+            )}
           </nav>
+
         </header>
         <main className="mx-auto max-w-6xl px-5 py-8">
           <Outlet />

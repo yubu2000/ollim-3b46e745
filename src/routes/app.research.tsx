@@ -1,16 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, HelpCircle, Loader2, Search, Tags } from "lucide-react";
+import { Bot, HelpCircle, Lightbulb, Loader2, Search, Tags } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ArticleWriter } from "@/components/ArticleWriter";
+import { supabase } from "@/integrations/supabase/client";
+import { useProjects } from "@/lib/project-context";
 import { getKeywordResearch } from "@/lib/research.functions";
 import type { KeywordResearch } from "@/lib/research.server";
+
 
 export const Route = createFileRoute("/app/research")({
   head: () => ({
@@ -35,6 +39,43 @@ function ResearchPage() {
   });
 
   const data = research.data;
+
+  const { project } = useProjects();
+  const latestAudit = useQuery({
+    queryKey: ["latest-audit", project?.id],
+    enabled: Boolean(project),
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("audits")
+        .select("id")
+        .eq("project_id", project!.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return rows?.[0]?.id ?? null;
+    },
+  });
+
+  // 리서치 결과(주제 + 질문)를 콘텐츠 제안 카드로 자동 변환한다.
+  const contentIdeas = data
+    ? data.topics.slice(0, 4).map((t, i) => {
+        const qs = data.questions
+          .slice(i * 2, i * 2 + 3)
+          .map((q) => q.question);
+        return {
+          title: `${t.topic} — ${data.keyword} 완벽 가이드`,
+          targetKeyword: data.keyword,
+          format: "가이드",
+          outline: [
+            `${t.topic} 개요`,
+            ...(qs.length > 0 ? qs : data.questions.slice(0, 3).map((q) => q.question)),
+            "정리 및 다음 단계",
+          ],
+          description: t.description,
+        };
+      })
+    : [];
+
 
   const submit = () => {
     const kw = keyword.trim();
@@ -164,6 +205,53 @@ function ResearchPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Lightbulb className="h-4 w-4" /> 콘텐츠 제안 (자동 생성)
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                위 주제·질문을 바탕으로 만든 콘텐츠 제안입니다. “글 자동 생성” 후 WordPress로 바로
+                배포할 수 있습니다.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!latestAudit.data ? (
+                <p className="text-sm text-muted-foreground">
+                  먼저 대시보드에서 진단을 1회 실행하면 여기서 글 생성·배포가 가능합니다.
+                </p>
+              ) : contentIdeas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">생성된 제안이 없습니다.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {contentIdeas.map((c) => (
+                    <div key={c.title} className="rounded-lg border border-border p-4">
+                      <p className="font-medium">{c.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {c.format} · 타깃 키워드 “{c.targetKeyword}”
+                      </p>
+                      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                        {c.outline.map((o, i) => (
+                          <li key={i}>
+                            {i + 1}. {o}
+                          </li>
+                        ))}
+                      </ul>
+                      <ArticleWriter
+                        auditId={latestAudit.data as string}
+                        title={c.title}
+                        targetKeyword={c.targetKeyword}
+                        format={c.format}
+                        outline={c.outline}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
         </>
       )}
     </div>
