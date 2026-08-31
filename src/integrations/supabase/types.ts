@@ -294,6 +294,75 @@ export type Database = {
           },
         ]
       }
+      generated_articles: {
+        Row: {
+          audit_id: string | null
+          created_at: string
+          faq: Json
+          format: string
+          id: string
+          jsonld: Json | null
+          markdown: string
+          meta_description: string
+          meta_title: string
+          outline: Json
+          project_id: string
+          target_keyword: string
+          title: string
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          audit_id?: string | null
+          created_at?: string
+          faq?: Json
+          format?: string
+          id?: string
+          jsonld?: Json | null
+          markdown?: string
+          meta_description?: string
+          meta_title?: string
+          outline?: Json
+          project_id: string
+          target_keyword?: string
+          title: string
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          audit_id?: string | null
+          created_at?: string
+          faq?: Json
+          format?: string
+          id?: string
+          jsonld?: Json | null
+          markdown?: string
+          meta_description?: string
+          meta_title?: string
+          outline?: Json
+          project_id?: string
+          target_keyword?: string
+          title?: string
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_articles_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_articles_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mention_runs: {
         Row: {
           competitors: string[]
