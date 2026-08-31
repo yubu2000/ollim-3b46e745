@@ -134,7 +134,7 @@ export const runMentionCheck = createServerFn({ method: "POST" })
             },
             { role: "user", content: prompt.text },
           ]);
-          const result = analyzeMention(answer, project.brand_name, project.competitors ?? []);
+          const result = analyzeMention(answer, project.brand_name, rivals);
           rows.push({
             prompt_id: prompt.id,
             project_id: project.id,
