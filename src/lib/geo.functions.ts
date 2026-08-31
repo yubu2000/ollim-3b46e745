@@ -67,8 +67,12 @@ export const runAudit = createServerFn({ method: "POST" })
     );
     if (itemsError) throw new Error(itemsError.message);
 
+    await consume(userId, "audit");
+    await checkAuditAlert(project.id, project.name, geo, url);
+
     return { auditId: audit.id, seo, geo };
   });
+
 
 export const runMentionCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
