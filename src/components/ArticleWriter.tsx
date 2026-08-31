@@ -1,7 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Code2, Copy, Download, Loader2, PenLine, Upload } from "lucide-react";
+import {
+  Code2,
+  Copy,
+  Download,
+  ImagePlus,
+  Loader2,
+  PenLine,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +26,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { PublishVerifier } from "@/components/PublishVerifier";
 
 import {
+  createArticleImage,
   generateArticle,
   publishArticleToWordPress,
   renderArticleHtml,
 } from "@/lib/insights.functions";
+
+type ArticleImage = { dataUrl: string; alt: string; filename: string };
+
 
 type Draft = {
   title: string;
@@ -49,10 +63,45 @@ export function ArticleWriter({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string>("");
   const [html, setHtml] = useState<string | null>(null);
+  const [images, setImages] = useState<ArticleImage[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const fn = useServerFn(generateArticle);
   const renderFn = useServerFn(renderArticleHtml);
   const publishFn = useServerFn(publishArticleToWordPress);
+  const imageFn = useServerFn(createArticleImage);
+
+  const makeImage = useMutation({
+    mutationFn: async () =>
+      (await imageFn({
+        data: { prompt: `${title} / 핵심 키워드: ${targetKeyword}` },
+      })) as unknown as { dataUrl: string },
+    onSuccess: (r) => {
+      setImages((prev) => [
+        ...prev,
+        { dataUrl: r.dataUrl, alt: title, filename: `ai-${prev.length + 1}` },
+      ]);
+      toast.success("이미지를 생성했습니다.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  async function addFiles(files: FileList | null) {
+    if (!files) return;
+    for (const file of Array.from(files).slice(0, 5)) {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("이미지를 읽지 못했습니다."));
+        reader.readAsDataURL(file);
+      });
+      setImages((prev) => [
+        ...prev,
+        { dataUrl, alt: title, filename: file.name.replace(/\.[^.]+$/, "") },
+      ]);
+    }
+  }
+
 
   const gen = useMutation({
     mutationFn: async () =>
@@ -98,17 +147,25 @@ export function ArticleWriter({
           faq: draft.faq,
           jsonld: draft.jsonld,
           status,
+          images: images.map((i) => ({ dataUrl: i.dataUrl, alt: i.alt, filename: i.filename })),
         },
-      })) as unknown as { id: number | null; link: string | null; status: string };
+      })) as unknown as {
+        id: number | null;
+        link: string | null;
+        status: string;
+        target: string;
+        images: number;
+      };
     },
     onSuccess: (r) => {
       if (r.link) setPublishedUrl(r.link);
       toast.success(
         r.status === "publish"
-          ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
-          : "WordPress에 임시글(draft)로 저장했습니다.",
+          ? `${r.target}에 게시했습니다.${r.images ? ` 이미지 ${r.images}장 포함.` : ""}${r.link ? ` (${r.link})` : ""}`
+          : `${r.target}에 임시글(draft)로 저장했습니다.`,
       );
     },
+
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -245,11 +302,69 @@ export function ArticleWriter({
                 <p className="mt-1 text-xs text-muted-foreground">약 {draft.wordCount} 단어</p>
               </div>
 
+              <div className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium">본문 이미지</p>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      void addFiles(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                    <ImagePlus className="mr-1 h-4 w-4" /> 파일 첨부
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={makeImage.isPending}
+                    onClick={() => makeImage.mutate()}
+                  >
+                    {makeImage.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-1 h-4 w-4" />
+                    )}
+                    AI 이미지 생성
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  첫 번째 이미지는 대표 이미지로, 나머지는 소제목 사이에 자동 삽입됩니다.
+                </p>
+                {images.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {images.map((img, i) => (
+                      <div key={i} className="relative">
+                        <img
+                          src={img.dataUrl}
+                          alt={img.alt}
+                          className="h-24 w-32 rounded-md border border-border object-cover"
+                        />
+                        <button
+                          type="button"
+                          aria-label="이미지 제거"
+                          className="absolute -right-2 -top-2 rounded-full bg-secondary p-1 text-secondary-foreground shadow"
+                          onClick={() => setImages((prev) => prev.filter((_, x) => x !== i))}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <Textarea
                 value={fullText}
                 readOnly
                 className="min-h-[380px] font-mono text-xs leading-relaxed"
               />
+
 
               {html && (
                 <div className="space-y-2">
@@ -286,7 +401,14 @@ export function ArticleWriter({
                 <p className="mb-2 mt-1 text-xs text-muted-foreground">
                   게시한 글이 실제로 열리는지, 최종 HTML에 canonical과 JSON-LD가 포함됐는지 확인합니다.
                 </p>
-                <PublishVerifier defaultUrl={publishedUrl} expectTitle={draft.title} compact />
+                <PublishVerifier
+                  defaultUrl={publishedUrl}
+                  expectTitle={draft.title}
+                  auditId={auditId}
+                  autoVerify
+                  compact
+                />
+
               </div>
 
 

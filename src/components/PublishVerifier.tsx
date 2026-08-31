@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Loader2, SearchCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -19,22 +19,32 @@ export function PublishVerifier({
   defaultUrl = "",
   expectTitle,
   compact = false,
+  auditId,
+  autoVerify = false,
 }: {
   defaultUrl?: string;
   expectTitle?: string;
   compact?: boolean;
+  auditId?: string;
+  autoVerify?: boolean;
 }) {
   const [url, setUrl] = useState(defaultUrl);
   const fn = useServerFn(verifyPublishedUrl);
+  const qc = useQueryClient();
 
   const check = useMutation({
     mutationFn: async () => {
       if (!url.trim()) throw new Error("검증할 주소를 입력해 주세요.");
       return (await fn({
-        data: { url, ...(expectTitle ? { expectTitle } : {}) },
+        data: {
+          url,
+          ...(expectTitle ? { expectTitle } : {}),
+          ...(auditId ? { auditId } : {}),
+        },
       })) as unknown as Verification;
     },
     onSuccess: (r) => {
+      if (auditId) void qc.invalidateQueries({ queryKey: ["publish-verifications", auditId] });
       const failed = r.checks.filter((c) => !c.passed).length;
       if (failed === 0) toast.success("게시 검증 통과 — 실제로 열리고 canonical·JSON-LD도 확인됐습니다.");
       else toast.warning(`검증 완료 — ${failed}개 항목이 통과하지 못했습니다.`);
@@ -42,7 +52,19 @@ export function PublishVerifier({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // 게시 직후 받은 주소는 한 번 자동으로 검증해 리포트에 반영한다.
+  const checkRef = useRef(check);
+  checkRef.current = check;
+  const autoDone = useRef("");
+  useEffect(() => {
+    setUrl(defaultUrl);
+    if (!autoVerify || !defaultUrl || autoDone.current === defaultUrl) return;
+    autoDone.current = defaultUrl;
+    checkRef.current.mutate();
+  }, [defaultUrl, autoVerify]);
+
   const errors = (check.data?.schemaIssues ?? []).filter((i) => i.level === "error");
+
 
   return (
     <div className="space-y-3">

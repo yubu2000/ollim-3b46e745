@@ -13,6 +13,8 @@ import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
 import { FIX_GUIDES } from "@/lib/fix-guides";
 import { SchemaStudio } from "@/components/SchemaStudio";
 import { PublishVerifier } from "@/components/PublishVerifier";
+import { PublishVerificationHistory } from "@/components/PublishVerificationHistory";
+
 
 
 export const Route = createFileRoute("/app/audit/$id")({
@@ -208,14 +210,18 @@ function AuditDetail() {
 
       <SchemaStudio auditId={id} />
 
-      <Card className="print:hidden">
+      <Card>
         <CardHeader>
           <CardTitle className="text-base">게시 검증 (실제 노출 · canonical · JSON-LD)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <PublishVerifier defaultUrl={data.audit.target_url} />
+        <CardContent className="space-y-4">
+          <div className="print:hidden">
+            <PublishVerifier defaultUrl={data.audit.target_url} auditId={id} />
+          </div>
+          <PublishVerificationHistory auditId={id} />
         </CardContent>
       </Card>
+
 
 
       <ItemList title="GEO 항목 (AI 답변 인용 최적화)" items={geo} />

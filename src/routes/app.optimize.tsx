@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/lib/project-context";
 import { optimizeContent } from "@/lib/geo.functions";
 import { publishArticleToWordPress } from "@/lib/insights.functions";
+import { WordPressSettings } from "@/components/WordPressSettings";
+
 
 export const Route = createFileRoute("/app/optimize")({
   component: OptimizePage,
@@ -69,6 +71,10 @@ function OptimizePage() {
           AI가 인용하기 좋은 구조로 본문을 다시 쓰고 FAQ 스키마를 만들어 드립니다.
         </p>
       </div>
+
+      <WordPressSettings />
+
+
 
       <Card>
         <CardContent className="space-y-4 p-5">
