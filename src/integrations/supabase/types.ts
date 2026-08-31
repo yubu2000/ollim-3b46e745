@@ -154,6 +154,7 @@ export type Database = {
           created_at: string
           geo_score: number
           id: string
+          keyword_suggestions: Json | null
           project_id: string
           seo_score: number
           status: string
@@ -165,6 +166,7 @@ export type Database = {
           created_at?: string
           geo_score?: number
           id?: string
+          keyword_suggestions?: Json | null
           project_id: string
           seo_score?: number
           status?: string
@@ -176,6 +178,7 @@ export type Database = {
           created_at?: string
           geo_score?: number
           id?: string
+          keyword_suggestions?: Json | null
           project_id?: string
           seo_score?: number
           status?: string
@@ -376,6 +379,7 @@ export type Database = {
           brand_name: string
           competitors: string[]
           created_at: string
+          gsc_site_url: string | null
           id: string
           last_auto_audit_at: string | null
           name: string
@@ -388,6 +392,7 @@ export type Database = {
           brand_name: string
           competitors?: string[]
           created_at?: string
+          gsc_site_url?: string | null
           id?: string
           last_auto_audit_at?: string | null
           name: string
@@ -400,6 +405,7 @@ export type Database = {
           brand_name?: string
           competitors?: string[]
           created_at?: string
+          gsc_site_url?: string | null
           id?: string
           last_auto_audit_at?: string | null
           name?: string
@@ -435,6 +441,65 @@ export type Database = {
             foreignKeyName: "prompts_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_console_snapshots: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number
+          fetched_at: string
+          id: string
+          impressions: number
+          period_end: string
+          period_start: string
+          position: number
+          project_id: string
+          site_url: string
+          top_pages: Json
+          top_queries: Json
+          user_id: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          period_end: string
+          period_start: string
+          position?: number
+          project_id: string
+          site_url: string
+          top_pages?: Json
+          top_queries?: Json
+          user_id: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          fetched_at?: string
+          id?: string
+          impressions?: number
+          period_end?: string
+          period_start?: string
+          position?: number
+          project_id?: string
+          site_url?: string
+          top_pages?: Json
+          top_queries?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_console_snapshots_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },

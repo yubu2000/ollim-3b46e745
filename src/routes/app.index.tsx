@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
 import { runAudit } from "@/lib/geo.functions";
 import { ScoreRing } from "@/components/ScoreRing";
+import { SearchConsoleCard } from "@/components/SearchConsoleCard";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
@@ -294,6 +295,8 @@ function ProjectDashboard() {
       </Card>
 
       <AutoAuditCard />
+
+      <SearchConsoleCard projectId={project!.id} />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
