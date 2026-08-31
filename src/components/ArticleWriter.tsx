@@ -1,0 +1,169 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Copy, Download, Loader2, PenLine } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { generateArticle } from "@/lib/insights.functions";
+
+type Draft = {
+  title: string;
+  markdown: string;
+  metaTitle: string;
+  metaDescription: string;
+  faq: { question: string; answer: string }[];
+  jsonld: Record<string, unknown>;
+  wordCount: number;
+};
+
+export function ArticleWriter({
+  auditId,
+  title,
+  targetKeyword,
+  format,
+  outline,
+}: {
+  auditId: string;
+  title: string;
+  targetKeyword: string;
+  format: string;
+  outline: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [length, setLength] = useState<"short" | "medium" | "long">("medium");
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const fn = useServerFn(generateArticle);
+
+  const gen = useMutation({
+    mutationFn: async () =>
+      (await fn({
+        data: { auditId, title, targetKeyword, format, outline, length },
+      })) as unknown as Draft,
+    onSuccess: (d) => {
+      setDraft(d);
+      toast.success("글 초안을 생성했습니다.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const fullText = draft
+    ? `# ${draft.title}\n\n${draft.markdown}\n\n## 자주 묻는 질문\n\n${draft.faq
+        .map((f) => `**${f.question}**\n\n${f.answer}`)
+        .join("\n\n")}\n`
+    : "";
+
+  function download() {
+    const blob = new Blob([fullText], { type: "text/markdown;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${title.replace(/[\\/:*?"<>|]/g, "-").slice(0, 60)}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="mt-3 print:hidden"
+        onClick={() => {
+          setOpen(true);
+          if (!draft) gen.mutate();
+        }}
+      >
+        <PenLine className="mr-1 h-4 w-4" /> 글 자동 생성
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">{title}</DialogTitle>
+            <DialogDescription>
+              {format} · 타깃 키워드 “{targetKeyword}” · 목차 {outline.length}개 기반 초안
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={length} onValueChange={(v) => setLength(v as typeof length)}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="short">짧게 (약 800자)</SelectItem>
+                <SelectItem value="medium">보통 (약 1400자)</SelectItem>
+                <SelectItem value="long">길게 (약 2200자)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" disabled={gen.isPending} onClick={() => gen.mutate()}>
+              {gen.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <PenLine className="mr-1 h-4 w-4" />
+              )}
+              {draft ? "다시 생성" : "생성"}
+            </Button>
+            {draft && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(fullText);
+                    toast.success("본문을 복사했습니다.");
+                  }}
+                >
+                  <Copy className="mr-1 h-4 w-4" /> 복사
+                </Button>
+                <Button size="sm" variant="outline" onClick={download}>
+                  <Download className="mr-1 h-4 w-4" /> .md 저장
+                </Button>
+              </>
+            )}
+          </div>
+
+          {gen.isPending && !draft && (
+            <p className="text-sm text-muted-foreground">
+              목차를 바탕으로 글을 작성하는 중입니다… 30초 정도 걸릴 수 있어요.
+            </p>
+          )}
+
+          {draft && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+                <p className="font-medium">검색 노출용 메타</p>
+                <p className="mt-1 text-muted-foreground">제목: {draft.metaTitle}</p>
+                <p className="text-muted-foreground">설명: {draft.metaDescription}</p>
+                <p className="mt-1 text-xs text-muted-foreground">약 {draft.wordCount} 단어</p>
+              </div>
+
+              <Textarea
+                value={fullText}
+                readOnly
+                className="min-h-[380px] font-mono text-xs leading-relaxed"
+              />
+
+              <details className="rounded-lg border border-border p-3 text-sm">
+                <summary className="cursor-pointer font-medium">
+                  구조화 데이터 (JSON-LD) — 페이지 &lt;head&gt;에 붙여넣기
+                </summary>
+                <pre className="mt-2 overflow-x-auto text-xs text-muted-foreground">
+                  {JSON.stringify(draft.jsonld, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
