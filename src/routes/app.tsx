@@ -74,7 +74,7 @@ function AppLayout() {
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
                 <TrendingUp className="h-4 w-4" />
               </span>
-              <span className="hidden sm:inline">GEO Radar</span>
+              <span className="hidden sm:inline">ollim Lab -올림연구소</span>
             </Link>
             <ProjectSwitcher />
             <div className="ml-auto flex items-center gap-2">
