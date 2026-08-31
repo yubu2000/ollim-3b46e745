@@ -174,16 +174,54 @@ export function ArticleWriter({
                   variant="outline"
                   onClick={() => {
                     void navigator.clipboard.writeText(fullText);
-                    toast.success("본문을 복사했습니다.");
+                    toast.success("마크다운 본문을 복사했습니다.");
                   }}
                 >
-                  <Copy className="mr-1 h-4 w-4" /> 복사
+                  <Copy className="mr-1 h-4 w-4" /> 마크다운 복사
                 </Button>
-                <Button size="sm" variant="outline" onClick={download}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => downloadFile(fullText, "md", "text/markdown")}
+                >
                   <Download className="mr-1 h-4 w-4" /> .md 저장
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={toHtml.isPending}
+                  onClick={() => toHtml.mutate()}
+                >
+                  {toHtml.isPending ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Code2 className="mr-1 h-4 w-4" />
+                  )}
+                  HTML로 변환
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={publish.isPending}
+                  onClick={() => publish.mutate("publish")}
+                >
+                  {publish.isPending ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-1 h-4 w-4" />
+                  )}
+                  WordPress에 배포하기
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={publish.isPending}
+                  onClick={() => publish.mutate("draft")}
+                >
+                  WordPress 임시저장
                 </Button>
               </>
             )}
+
           </div>
 
           {gen.isPending && !draft && (
