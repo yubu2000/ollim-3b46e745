@@ -1,7 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Code2, Copy, Download, Loader2, PenLine, Upload } from "lucide-react";
+import {
+  Code2,
+  Copy,
+  Download,
+  ImagePlus,
+  Loader2,
+  PenLine,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,10 +26,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { PublishVerifier } from "@/components/PublishVerifier";
 
 import {
+  createArticleImage,
   generateArticle,
   publishArticleToWordPress,
   renderArticleHtml,
 } from "@/lib/insights.functions";
+
+type ArticleImage = { dataUrl: string; alt: string; filename: string };
+
 
 type Draft = {
   title: string;
