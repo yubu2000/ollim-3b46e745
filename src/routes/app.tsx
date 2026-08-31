@@ -9,6 +9,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  Search,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -44,6 +45,7 @@ export const Route = createFileRoute("/app")({
 
 const nav = [
   { to: "/app", label: "대시보드", icon: LayoutDashboard, exact: true },
+  { to: "/app/research", label: "키워드 리서치", icon: Search, exact: false },
   { to: "/app/mentions", label: "LLM 언급 추적", icon: Bot, exact: false },
   { to: "/app/optimize", label: "콘텐츠 최적화", icon: Sparkles, exact: false },
   { to: "/app/competitors", label: "경쟁사 비교", icon: Swords, exact: false },
