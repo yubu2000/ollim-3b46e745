@@ -205,6 +205,53 @@ function ResearchPage() {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Lightbulb className="h-4 w-4" /> 콘텐츠 제안 (자동 생성)
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                위 주제·질문을 바탕으로 만든 콘텐츠 제안입니다. “글 자동 생성” 후 WordPress로 바로
+                배포할 수 있습니다.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {!latestAudit.data ? (
+                <p className="text-sm text-muted-foreground">
+                  먼저 대시보드에서 진단을 1회 실행하면 여기서 글 생성·배포가 가능합니다.
+                </p>
+              ) : contentIdeas.length === 0 ? (
+                <p className="text-sm text-muted-foreground">생성된 제안이 없습니다.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {contentIdeas.map((c) => (
+                    <div key={c.title} className="rounded-lg border border-border p-4">
+                      <p className="font-medium">{c.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {c.format} · 타깃 키워드 “{c.targetKeyword}”
+                      </p>
+                      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                        {c.outline.map((o, i) => (
+                          <li key={i}>
+                            {i + 1}. {o}
+                          </li>
+                        ))}
+                      </ul>
+                      <ArticleWriter
+                        auditId={latestAudit.data}
+                        title={c.title}
+                        targetKeyword={c.targetKeyword}
+                        format={c.format}
+                        outline={c.outline}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
         </>
       )}
     </div>
