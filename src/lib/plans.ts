@@ -20,9 +20,10 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     price: 0,
     audits: 5,
     mentions: 5,
+    aiCredits: 20,
     exports: false,
     blurb: "GEO를 처음 점검해 보는 단계",
-    features: ["진단 5회/월", "멘션 체크 5회/월", "경쟁사 1곳", "PDF·공유 링크 미포함"],
+    features: ["진단 5회/월", "멘션 체크 5회/월", "AI 크레딧 20/월", "경쟁사 1곳", "PDF·공유 링크 미포함"],
   },
   pro: {
     id: "pro",
@@ -30,9 +31,10 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     price: 29000,
     audits: 100,
     mentions: 100,
+    aiCredits: 400,
     exports: true,
     blurb: "한 브랜드를 꾸준히 모니터링",
-    features: ["진단 100회/월", "멘션 체크 100회/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림"],
+    features: ["진단 100회/월", "멘션 체크 100회/월", "AI 크레딧 400/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림"],
   },
   business: {
     id: "business",
@@ -40,9 +42,10 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     price: 99000,
     audits: 2000,
     mentions: 2000,
+    aiCredits: 4000,
     exports: true,
     blurb: "여러 브랜드·대행사용",
-    features: ["진단 2,000회/월", "멘션 체크 2,000회/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림", "사용량 리포트"],
+    features: ["진단 2,000회/월", "멘션 체크 2,000회/월", "AI 크레딧 4,000/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림", "사용량 리포트"],
   },
 };
 
@@ -59,3 +62,13 @@ export function planOf(value: string | null | undefined): PlanId {
 export function formatKrw(value: number) {
   return value === 0 ? "무료" : `₩${value.toLocaleString("ko-KR")}/월`;
 }
+
+/** AI 크레딧 소모량 (한 번 실행당). 토큰 비용이 큰 작업일수록 높습니다. */
+export const AI_COST = {
+  research: 1,
+  optimize: 2,
+  article: 3,
+  image: 4,
+  suggestions: 2,
+} as const;
+export type AiAction = keyof typeof AI_COST;
