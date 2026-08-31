@@ -245,6 +245,37 @@ export function ArticleWriter({
                 className="min-h-[380px] font-mono text-xs leading-relaxed"
               />
 
+              {html && (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium">HTML (관리자 화면에 그대로 붙여넣기)</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(html);
+                        toast.success("HTML을 복사했습니다.");
+                      }}
+                    >
+                      <Copy className="mr-1 h-4 w-4" /> HTML 복사
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadFile(html, "html", "text/html")}
+                    >
+                      <Download className="mr-1 h-4 w-4" /> .html 저장
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={html}
+                    readOnly
+                    className="min-h-[260px] font-mono text-xs leading-relaxed"
+                  />
+                </div>
+              )}
+
+
               <details className="rounded-lg border border-border p-3 text-sm">
                 <summary className="cursor-pointer font-medium">
                   구조화 데이터 (JSON-LD) — 페이지 &lt;head&gt;에 붙여넣기
