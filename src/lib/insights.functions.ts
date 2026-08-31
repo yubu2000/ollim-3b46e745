@@ -118,7 +118,10 @@ export const generateArticle = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { draftArticle } = await import("./article.server");
+    const { assertQuota, consume } = await import("./billing.server");
+    const { AI_COST } = await import("./plans");
     const { supabase, userId } = context;
+    await assertQuota(userId, "ai", AI_COST.article);
 
     const { data: audit } = await supabase
       .from("audits")
@@ -174,6 +177,7 @@ export const generateArticle = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    await consume(userId, "ai", AI_COST.article);
 
     return { ...draft, id: saved.id, jsonld: JSON.stringify(draft.jsonld, null, 2) };
   });
@@ -503,4 +507,68 @@ export const listPublishVerifications = createServerFn({ method: "POST" })
       .limit(10);
     if (error) throw new Error(error.message);
     return rows ?? [];
+  });
+
+/**
+ * 게시 검증을 통과한 글을 근거로 다음 콘텐츠 제안을 생성합니다.
+ * 검증 통과(도달 + canonical + JSON-LD) 페이지의 제목/URL을 모아
+ * 내부 링크·토픽 클러스터 관점에서 후속 콘텐츠를 추천합니다.
+ */
+export const getVerifiedContentSuggestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ auditId: z.string().uuid(), refresh: z.boolean().default(false) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { suggestFromVerifiedPages } = await import("./followup.server");
+    const { withAiCredits } = await import("./billing.server");
+    const { AI_COST } = await import("./plans");
+    const { supabase, userId } = context;
+
+    const { data: audit } = await supabase
+      .from("audits")
+      .select("id, project_id, target_url")
+      .eq("id", data.auditId)
+      .maybeSingle();
+    if (!audit) throw new Error("진단을 찾을 수 없습니다.");
+
+    const { data: project } = await supabase
+      .from("projects")
+      .select("brand_name, site_url")
+      .eq("id", audit.project_id)
+      .maybeSingle();
+
+    const { data: verified } = await supabase
+      .from("publish_verifications")
+      .select("url, final_url, checks, jsonld_types, has_canonical, has_jsonld, reachable, created_at")
+      .eq("user_id", userId)
+      .eq("reachable", true)
+      .eq("has_canonical", true)
+      .eq("has_jsonld", true)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    const pages = (verified ?? []).map((v) => {
+      const checks = Array.isArray(v.checks) ? (v.checks as { id?: string; detail?: string }[]) : [];
+      const titleCheck = checks.find((c) => c?.id === "title-match")?.detail ?? "";
+      const title = titleCheck.replace(/[""]/g, "").replace(" 확인", "").trim();
+      return {
+        url: v.final_url || v.url,
+        title: title || (v.final_url || v.url),
+        schemas: v.jsonld_types ?? [],
+      };
+    });
+
+    if (pages.length === 0) {
+      return { pages: [], suggestions: [], note: "게시 검증을 통과한 글이 아직 없습니다. 게시 후 검증을 실행하면 후속 콘텐츠를 제안합니다." };
+    }
+
+    const suggestions = await withAiCredits(userId, AI_COST.suggestions, () =>
+      suggestFromVerifiedPages({
+        brand: project?.brand_name ?? "",
+        siteUrl: project?.site_url ?? audit.target_url,
+        pages,
+      }),
+    );
+    return { pages, suggestions, note: "" };
   });
