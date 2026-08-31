@@ -99,3 +99,108 @@ export const getKeywordSuggestions = createServerFn({ method: "POST" })
 
     return suggestions;
   });
+
+/** Turn a recommended title + outline into a full article draft. */
+export const generateArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        auditId: z.string().uuid(),
+        title: z.string().min(2),
+        targetKeyword: z.string().default(""),
+        format: z.string().default("가이드"),
+        outline: z.array(z.string()).default([]),
+        length: z.enum(["short", "medium", "long"]).default("medium"),
+        tone: z.string().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { draftArticle } = await import("./article.server");
+    const { supabase, userId } = context;
+
+    const { data: audit } = await supabase
+      .from("audits")
+      .select("id, project_id, keyword_suggestions")
+      .eq("id", data.auditId)
+      .maybeSingle();
+    if (!audit) throw new Error("진단을 찾을 수 없습니다.");
+
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, brand_name, site_url")
+      .eq("id", audit.project_id)
+      .maybeSingle();
+    if (!project) throw new Error("프로젝트를 찾을 수 없습니다.");
+
+    const suggestions = (audit.keyword_suggestions ?? {}) as {
+      keywords?: { keyword: string }[];
+    };
+    const supporting = (suggestions.keywords ?? [])
+      .map((k) => k.keyword)
+      .filter((k) => k && k !== data.targetKeyword)
+      .slice(0, 6);
+
+    const draft = await draftArticle({
+      title: data.title,
+      targetKeyword: data.targetKeyword,
+      format: data.format,
+      outline: data.outline,
+      brand: project.brand_name ?? "",
+      siteUrl: project.site_url,
+      supportingKeywords: supporting,
+      length: data.length,
+      ...(data.tone ? { tone: data.tone } : {}),
+    });
+
+    const { data: saved, error } = await supabase
+      .from("generated_articles")
+      .insert({
+        user_id: userId,
+        project_id: project.id,
+        audit_id: audit.id,
+        title: draft.title,
+        target_keyword: draft.targetKeyword,
+        format: draft.format,
+        outline: draft.outline as never,
+        markdown: draft.markdown,
+        meta_title: draft.metaTitle,
+        meta_description: draft.metaDescription,
+        faq: draft.faq as never,
+        jsonld: draft.jsonld as never,
+        word_count: draft.wordCount,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    return { id: saved.id, ...draft };
+  });
+
+/** Previously generated drafts for a project. */
+export const listArticles = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ projectId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("generated_articles")
+      .select("*")
+      .eq("project_id", data.projectId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const deleteArticle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("generated_articles")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
