@@ -30,14 +30,32 @@ export async function getUsage(userId: string) {
   return { audit: of("audit"), mention: of("mention") };
 }
 
-function limitFor(plan: PlanId, kind: UsageKind) {
-  return kind === "audit" ? PLANS[plan].audits : PLANS[plan].mentions;
+async function getOverride(userId: string) {
+  const { data } = await supabaseAdmin
+    .from("plan_overrides")
+    .select("audits, mentions, exports")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data ?? null;
+}
+
+/** Effective limits = plan defaults, widened by any admin override. */
+export async function getLimits(userId: string) {
+  const [plan, override] = await Promise.all([getPlan(userId), getOverride(userId)]);
+  return {
+    plan,
+    audit: override?.audits ?? PLANS[plan].audits,
+    mention: override?.mentions ?? PLANS[plan].mentions,
+    exports: override?.exports ?? PLANS[plan].exports,
+    overridden: Boolean(override),
+  };
 }
 
 /** Throws when the monthly quota would be exceeded. `amount` = units about to be consumed. */
 export async function assertQuota(userId: string, kind: UsageKind, amount = 1) {
-  const [plan, usage] = await Promise.all([getPlan(userId), getUsage(userId)]);
-  const limit = limitFor(plan, kind);
+  const [limits, usage] = await Promise.all([getLimits(userId), getUsage(userId)]);
+  const plan = limits.plan;
+  const limit = kind === "audit" ? limits.audit : limits.mention;
   const used = usage[kind];
   if (used + amount > limit) {
     const name = kind === "audit" ? "진단" : "멘션 체크";
@@ -69,8 +87,9 @@ export async function consume(userId: string, kind: UsageKind, amount = 1) {
 }
 
 export async function assertExportAllowed(userId: string) {
-  const plan = await getPlan(userId);
-  if (!PLANS[plan].exports) {
+  const limits = await getLimits(userId);
+  const plan = limits.plan;
+  if (!limits.exports) {
     throw new Error("PDF 내보내기와 공유 링크는 Pro 플랜부터 사용할 수 있습니다.");
   }
   return plan;
