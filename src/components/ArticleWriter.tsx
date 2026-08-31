@@ -98,6 +98,7 @@ export function ArticleWriter({
       })) as unknown as { id: number | null; link: string | null; status: string };
     },
     onSuccess: (r) => {
+      if (r.link) setPublishedUrl(r.link);
       toast.success(
         r.status === "publish"
           ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
@@ -106,6 +107,7 @@ export function ArticleWriter({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const fullText = draft
     ? `# ${draft.title}\n\n${draft.markdown}\n\n## 자주 묻는 질문\n\n${draft.faq
