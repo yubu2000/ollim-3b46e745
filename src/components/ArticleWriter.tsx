@@ -279,6 +279,14 @@ export function ArticleWriter({
                 </div>
               )}
 
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-sm font-medium">게시 검증</p>
+                <p className="mb-2 mt-1 text-xs text-muted-foreground">
+                  게시한 글이 실제로 열리는지, 최종 HTML에 canonical과 JSON-LD가 포함됐는지 확인합니다.
+                </p>
+                <PublishVerifier defaultUrl={publishedUrl} expectTitle={draft.title} compact />
+              </div>
+
 
               <details className="rounded-lg border border-border p-3 text-sm">
                 <summary className="cursor-pointer font-medium">
