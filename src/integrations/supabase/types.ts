@@ -203,6 +203,7 @@ export type Database = {
           is_self: boolean
           items: Json
           label: string
+          metrics: Json
           project_id: string
           seo_score: number
           url: string
@@ -217,6 +218,7 @@ export type Database = {
           is_self?: boolean
           items?: Json
           label: string
+          metrics?: Json
           project_id: string
           seo_score?: number
           url: string
@@ -231,6 +233,7 @@ export type Database = {
           is_self?: boolean
           items?: Json
           label?: string
+          metrics?: Json
           project_id?: string
           seo_score?: number
           url?: string
@@ -368,28 +371,37 @@ export type Database = {
       }
       projects: {
         Row: {
+          auto_audit_enabled: boolean
+          auto_audit_interval_hours: number
           brand_name: string
           competitors: string[]
           created_at: string
           id: string
+          last_auto_audit_at: string | null
           name: string
           site_url: string
           user_id: string
         }
         Insert: {
+          auto_audit_enabled?: boolean
+          auto_audit_interval_hours?: number
           brand_name: string
           competitors?: string[]
           created_at?: string
           id?: string
+          last_auto_audit_at?: string | null
           name: string
           site_url: string
           user_id: string
         }
         Update: {
+          auto_audit_enabled?: boolean
+          auto_audit_interval_hours?: number
           brand_name?: string
           competitors?: string[]
           created_at?: string
           id?: string
+          last_auto_audit_at?: string | null
           name?: string
           site_url?: string
           user_id?: string

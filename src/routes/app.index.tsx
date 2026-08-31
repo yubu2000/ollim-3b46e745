@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Radar } from "lucide-react";
+import { Clock, Loader2, Plus, Radar } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -18,6 +18,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
@@ -106,6 +114,84 @@ export function CreateProject({ first = false }: { first?: boolean }) {
             프로젝트 만들기
           </Button>
         </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AutoAuditCard() {
+  const { project } = useProjects();
+  const queryClient = useQueryClient();
+
+  const settings = useQuery({
+    queryKey: ["auto-audit", project?.id],
+    enabled: Boolean(project),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("auto_audit_enabled, auto_audit_interval_hours, last_auto_audit_at")
+        .eq("id", project!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as {
+        auto_audit_enabled: boolean;
+        auto_audit_interval_hours: number;
+        last_auto_audit_at: string | null;
+      } | null;
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async (patch: Record<string, unknown>) => {
+      const { error } = await supabase.from("projects").update(patch as never).eq("id", project!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("자동 진단 설정을 저장했습니다.");
+      queryClient.invalidateQueries({ queryKey: ["auto-audit", project?.id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const enabled = settings.data?.auto_audit_enabled ?? true;
+  const interval = String(settings.data?.auto_audit_interval_hours ?? 24);
+  const last = settings.data?.last_auto_audit_at;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Clock className="h-4 w-4" /> 자동 진단
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-center gap-6">
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={enabled}
+            onCheckedChange={(v) => save.mutate({ auto_audit_enabled: v })}
+            aria-label="자동 진단 사용"
+          />
+          <span className="text-sm">{enabled ? "주기적으로 자동 실행" : "사용 안 함"}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-sm text-muted-foreground">주기</Label>
+          <Select value={interval} onValueChange={(v) => save.mutate({ auto_audit_interval_hours: Number(v) })}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="6">6시간</SelectItem>
+              <SelectItem value="12">12시간</SelectItem>
+              <SelectItem value="24">매일</SelectItem>
+              <SelectItem value="72">3일</SelectItem>
+              <SelectItem value="168">매주</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          최근 자동 진단:{" "}
+          {last ? new Date(last).toLocaleString("ko-KR") : "아직 실행 전"}
+        </p>
       </CardContent>
     </Card>
   );
@@ -206,6 +292,8 @@ function ProjectDashboard() {
           </Button>
         </CardContent>
       </Card>
+
+      <AutoAuditCard />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
