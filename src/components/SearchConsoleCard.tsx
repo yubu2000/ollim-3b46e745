@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, RefreshCw, Search } from "lucide-react";
@@ -73,6 +74,22 @@ export function SearchConsoleCard({ projectId }: { projectId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const hasData = Boolean(
+    snapshot.data && (snapshot.data.clicks > 0 || snapshot.data.impressions > 0),
+  );
+  const autoRefreshOn = Boolean(project.data?.gsc_site_url) && !hasData;
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+
+  // GSC 지표가 채워질 때까지 1시간마다 자동으로 다시 가져온다.
+  useEffect(() => {
+    if (!autoRefreshOn) return;
+    const id = setInterval(() => {
+      if (!refreshRef.current.isPending) refreshRef.current.mutate();
+    }, 60 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [autoRefreshOn, projectId]);
+
   const options = properties.data
     ? properties.data.matches.length > 0
       ? properties.data.matches
@@ -90,6 +107,7 @@ export function SearchConsoleCard({ projectId }: { projectId: string }) {
           </CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
             최근 28일 실제 검색 데이터 · 자동 진단 시 함께 갱신됩니다.
+            {autoRefreshOn && " · 데이터가 채워질 때까지 1시간마다 자동 새로고침 중"}
           </p>
         </div>
         {selected && (

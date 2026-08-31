@@ -1,5 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
   BellRing,
@@ -7,6 +9,7 @@ import {
   CreditCard,
   LayoutDashboard,
   LogOut,
+  ShieldCheck,
   Sparkles,
   Swords,
   TrendingUp,
@@ -22,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { ProjectProvider, useProjects } from "@/lib/project-context";
+import { getAdminStatus } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -51,6 +55,13 @@ const nav = [
 
 function AppLayout() {
   const { user, loading, signOut } = useAuth();
+  const statusFn = useServerFn(getAdminStatus);
+  const adminStatus = useQuery({
+    queryKey: ["admin-status"],
+    enabled: Boolean(user),
+    staleTime: 5 * 60_000,
+    queryFn: () => statusFn({}),
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,7 +96,12 @@ function AppLayout() {
             </div>
           </div>
           <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2">
-            {nav.map((n) => (
+            {[
+              ...nav,
+              ...(adminStatus.data?.admin
+                ? [{ to: "/app/admin", label: "마스터 관리자", icon: ShieldCheck, exact: false } as const]
+                : []),
+            ].map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
