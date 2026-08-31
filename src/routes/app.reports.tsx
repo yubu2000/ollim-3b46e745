@@ -97,11 +97,12 @@ function ReportsPage() {
       s1.addText("핵심 지표", { x: 0.5, y: 0.4, fontSize: 24, bold: true });
       s1.addTable(
         [
-          ["항목", "값"],
-          ["SEO 점수", String(seo)],
-          ["GEO 점수", String(geo)],
-          ["AI 언급률", `${rate}%`],
+          [{ text: "항목" }, { text: "값" }],
+          [{ text: "SEO 점수" }, { text: String(seo) }],
+          [{ text: "GEO 점수" }, { text: String(geo) }],
+          [{ text: "AI 언급률" }, { text: `${rate}%` }],
         ],
+
         { x: 0.5, y: 1.3, w: 8, fontSize: 14, border: { pt: 1, color: "DDDDDD" } },
       );
 
