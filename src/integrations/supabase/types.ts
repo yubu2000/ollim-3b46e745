@@ -548,6 +548,78 @@ export type Database = {
           },
         ]
       }
+      publish_verifications: {
+        Row: {
+          audit_id: string | null
+          canonical: string
+          checks: Json
+          created_at: string
+          final_url: string
+          has_canonical: boolean
+          has_jsonld: boolean
+          id: string
+          jsonld_types: string[]
+          passed_count: number
+          project_id: string | null
+          reachable: boolean
+          status: number
+          total_count: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          audit_id?: string | null
+          canonical?: string
+          checks?: Json
+          created_at?: string
+          final_url?: string
+          has_canonical?: boolean
+          has_jsonld?: boolean
+          id?: string
+          jsonld_types?: string[]
+          passed_count?: number
+          project_id?: string | null
+          reachable?: boolean
+          status?: number
+          total_count?: number
+          url: string
+          user_id: string
+        }
+        Update: {
+          audit_id?: string | null
+          canonical?: string
+          checks?: Json
+          created_at?: string
+          final_url?: string
+          has_canonical?: boolean
+          has_jsonld?: boolean
+          id?: string
+          jsonld_types?: string[]
+          passed_count?: number
+          project_id?: string | null
+          reachable?: boolean
+          status?: number
+          total_count?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publish_verifications_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publish_verifications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_console_snapshots: {
         Row: {
           clicks: number
@@ -726,6 +798,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      wordpress_sites: {
+        Row: {
+          app_password: string
+          created_at: string
+          default_status: string
+          id: string
+          last_check_ok: boolean | null
+          last_checked_at: string | null
+          site_url: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          app_password: string
+          created_at?: string
+          default_status?: string
+          id?: string
+          last_check_ok?: boolean | null
+          last_checked_at?: string | null
+          site_url: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          app_password?: string
+          created_at?: string
+          default_status?: string
+          id?: string
+          last_check_ok?: boolean | null
+          last_checked_at?: string | null
+          site_url?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }
