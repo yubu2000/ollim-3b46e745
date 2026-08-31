@@ -4,19 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
-  BellRing,
   Bot,
-  CreditCard,
+  ChevronDown,
   LayoutDashboard,
   LogOut,
-  Search,
   ShieldCheck,
   Sparkles,
-  Swords,
   TrendingUp,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -27,6 +30,10 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { ProjectProvider, useProjects } from "@/lib/project-context";
 import { getAdminStatus } from "@/lib/admin.functions";
+
+const navLinkClass =
+  "flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary outline-none";
+
 
 export const Route = createFileRoute("/app")({
   head: () => ({
