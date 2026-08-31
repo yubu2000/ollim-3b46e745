@@ -33,6 +33,16 @@ export async function generateSchemasForUrl(opts: {
     .filter(Boolean)
     .slice(0, 12);
 
+  // Question-style headings + the paragraph that follows them become FAQ pairs.
+  const faq: { question: string; answer: string }[] = [];
+  for (const m of html.matchAll(/<h([2-4])[^>]*>([\s\S]*?)<\/h\1>([\s\S]{0,1200}?)(?=<h[2-4][\s>]|$)/gi)) {
+    const q = stripTags(m[2] ?? "");
+    if (!/\?|나요|까요|인가요|하나요|무엇|어떻게/.test(q)) continue;
+    const answer = stripTags(m[3] ?? "").slice(0, 300);
+    if (q && answer.length > 10) faq.push({ question: q, answer });
+    if (faq.length >= 6) break;
+  }
+
   const blocks = [...html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)].map(
     (m) => m[1] ?? "",
   );
@@ -43,9 +53,11 @@ export async function generateSchemasForUrl(opts: {
     title: title || opts.brand || url,
     description,
     headings,
+    faq,
     brand: opts.brand ?? "",
     ...(opts.siteUrl ? { siteUrl: opts.siteUrl } : {}),
   });
+
 
   const schemas: GeneratedSchemas["schemas"] = [];
   const push = (key: "article" | "faq" | "organization", label: string, obj: unknown) => {
