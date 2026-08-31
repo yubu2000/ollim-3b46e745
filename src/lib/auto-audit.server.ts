@@ -12,12 +12,13 @@ type DueProject = {
   brand_name: string;
   auto_audit_interval_hours: number;
   last_auto_audit_at: string | null;
+  gsc_site_url: string | null;
 };
 
 export async function runScheduledAudits(limit = 20) {
   const { data, error } = await supabaseAdmin
     .from("projects")
-    .select("id, user_id, name, site_url, brand_name, auto_audit_interval_hours, last_auto_audit_at")
+    .select("id, user_id, name, site_url, brand_name, auto_audit_interval_hours, last_auto_audit_at, gsc_site_url")
     .eq("auto_audit_enabled", true)
     .order("last_auto_audit_at", { ascending: true, nullsFirst: true })
     .limit(limit);
@@ -71,6 +72,16 @@ export async function runScheduledAudits(limit = 20) {
         })),
       );
       if (itemsError) throw new Error(itemsError.message);
+
+      // Keep Search Console SEO metrics fresh alongside the audit.
+      if (project.gsc_site_url) {
+        try {
+          const { refreshProjectSnapshot } = await import("./gsc.server");
+          await refreshProjectSnapshot(supabaseAdmin as never, project);
+        } catch {
+          // Search Console is optional — never fail the audit because of it.
+        }
+      }
 
       await consume(project.user_id, "audit");
       await checkAuditAlert(project.id, project.name, geo, url);
