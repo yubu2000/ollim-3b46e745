@@ -21,7 +21,7 @@ type Draft = {
   metaTitle: string;
   metaDescription: string;
   faq: { question: string; answer: string }[];
-  jsonld: Record<string, unknown>;
+  jsonld: string;
   wordCount: number;
 };
 
@@ -157,7 +157,7 @@ export function ArticleWriter({
                   구조화 데이터 (JSON-LD) — 페이지 &lt;head&gt;에 붙여넣기
                 </summary>
                 <pre className="mt-2 overflow-x-auto text-xs text-muted-foreground">
-                  {JSON.stringify(draft.jsonld, null, 2)}
+                  {draft.jsonld}
                 </pre>
               </details>
             </div>

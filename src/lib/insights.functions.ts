@@ -175,7 +175,7 @@ export const generateArticle = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    return { id: saved.id, ...draft };
+    return { ...draft, id: saved.id, jsonld: JSON.stringify(draft.jsonld, null, 2) };
   });
 
 /** Previously generated drafts for a project. */
