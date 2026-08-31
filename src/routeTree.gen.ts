@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppCompetitorsRouteImport } from './routes/app.competitors'
 import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppOptimizeRouteImport } from './routes/app.optimize'
@@ -37,6 +38,11 @@ const AuthRoute = AuthRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/billing': typeof AppBillingRoute
   '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/billing'
     | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/billing': {
+      id: '/app/billing'
+      path: '/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/competitors': {
       id: '/app/competitors'
       path: '/competitors'
@@ -208,6 +227,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBillingRoute: typeof AppBillingRoute
   AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppMentionsRoute: typeof AppMentionsRoute
   AppOptimizeRoute: typeof AppOptimizeRoute
@@ -217,6 +237,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBillingRoute: AppBillingRoute,
   AppCompetitorsRoute: AppCompetitorsRoute,
   AppMentionsRoute: AppMentionsRoute,
   AppOptimizeRoute: AppOptimizeRoute,
