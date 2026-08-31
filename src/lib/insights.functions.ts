@@ -58,6 +58,7 @@ export const getKeywordSuggestions = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { buildKeywordSuggestions } = await import("./keyword-suggest.server");
+    type Suggestions = Awaited<ReturnType<typeof buildKeywordSuggestions>>;
     const { supabase, userId } = context;
 
     const { data: audit, error } = await supabase
@@ -69,7 +70,7 @@ export const getKeywordSuggestions = createServerFn({ method: "POST" })
     if (!audit) throw new Error("진단을 찾을 수 없습니다.");
 
     if (!data.refresh && audit.keyword_suggestions) {
-      return audit.keyword_suggestions as unknown;
+      return audit.keyword_suggestions as unknown as Suggestions;
     }
 
     const { data: project } = await supabase
@@ -96,5 +97,5 @@ export const getKeywordSuggestions = createServerFn({ method: "POST" })
       .eq("id", audit.id)
       .eq("user_id", userId);
 
-    return suggestions as unknown;
+    return suggestions;
   });
