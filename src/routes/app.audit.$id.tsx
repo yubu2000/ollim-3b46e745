@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, CheckCircle2, Copy, Link2, Loader2, Printer, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
+import { createShareLink, revokeShareLink } from "@/lib/saas.functions";
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
 });
+
 
 type Item = {
   id: string;

@@ -19,6 +19,7 @@ import { Route as AppCompetitorsRouteImport } from './routes/app.competitors'
 import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppOptimizeRouteImport } from './routes/app.optimize'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
+import { Route as RTokenRouteImport } from './routes/r.$token'
 import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const AppReportsRoute = AppReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
+const RTokenRoute = RTokenRouteImport.update({
+  id: '/r/$token',
+  path: '/r/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppAuditIdRoute = AppAuditIdRouteImport.update({
   id: '/audit/$id',
   path: '/audit/$id',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
+  '/r/$token': typeof RTokenRoute
   '/app/': typeof AppIndexRoute
   '/app/audit/$id': typeof AppAuditIdRoute
 }
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app/'
     | '/app/audit/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app'
     | '/app/audit/$id'
   id:
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
+    | '/r/$token'
     | '/app/'
     | '/app/audit/$id'
   fileRoutesById: FileRoutesById
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  RTokenRoute: typeof RTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -235,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/r/$token': {
+      id: '/r/$token'
+      path: '/r/$token'
+      fullPath: '/r/$token'
+      preLoaderRoute: typeof RTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/audit/$id': {
       id: '/app/audit/$id'
       path: '/audit/$id'
@@ -273,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  RTokenRoute: RTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
