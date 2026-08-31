@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Loader2, Sparkles } from "lucide-react";
+import { Copy, ExternalLink, Loader2, Sparkles, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProjects } from "@/lib/project-context";
 import { optimizeContent } from "@/lib/geo.functions";
+import { publishArticleToWordPress } from "@/lib/insights.functions";
 
 export const Route = createFileRoute("/app/optimize")({
   component: OptimizePage,
@@ -19,14 +20,39 @@ export const Route = createFileRoute("/app/optimize")({
 function OptimizePage() {
   const { project } = useProjects();
   const optimize = useServerFn(optimizeContent);
+  const publishFn = useServerFn(publishArticleToWordPress);
   const [topic, setTopic] = useState("");
   const [content, setContent] = useState("");
+  const [published, setPublished] = useState<{ link: string | null; status: string } | null>(null);
 
   const run = useMutation({
     mutationFn: async () =>
       optimize({
         data: { brand: project?.brand_name ?? "", topic, content },
       }),
+    onSuccess: () => setPublished(null),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const publish = useMutation({
+    mutationFn: async (status: "draft" | "publish") => {
+      const rewrite = run.data?.rewrite ?? "";
+      if (!rewrite.trim()) throw new Error("먼저 GEO 최적화를 실행해 주세요.");
+      return publishFn({
+        data: {
+          title: topic.trim() || (project?.brand_name ?? "최적화 콘텐츠"),
+          markdown: rewrite,
+          metaDescription: rewrite.replace(/[#*`>-]/g, "").trim().slice(0, 150),
+          faq: [],
+          ...(run.data?.faq ? { jsonld: run.data.faq } : {}),
+          status,
+        },
+      });
+    },
+    onSuccess: (res) => {
+      setPublished({ link: res.link, status: res.status });
+      toast.success(res.status === "publish" ? "WordPress에 게시했습니다." : "WordPress에 임시저장했습니다.");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -84,6 +110,44 @@ function OptimizePage() {
           <ResultCard title="재작성된 본문" body={run.data.rewrite} onCopy={copy} />
           <ResultCard title="FAQ JSON-LD (페이지 <head>에 삽입)" body={run.data.faq} mono onCopy={copy} />
           <ResultCard title="추가 개선 팁" body={run.data.tips} onCopy={copy} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">WordPress 배포</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                재작성된 본문과 FAQ 스키마를 함께 담아 연결된 WordPress 블로그로 보냅니다.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={publish.isPending} onClick={() => publish.mutate("publish")}>
+                  {publish.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  WordPress에 배포하기
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={publish.isPending}
+                  onClick={() => publish.mutate("draft")}
+                >
+                  WordPress 임시저장
+                </Button>
+              </div>
+              {published?.link && (
+                <a
+                  href={published.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center text-sm text-primary underline"
+                >
+                  <ExternalLink className="mr-1 h-4 w-4" /> 게시된 글 열기
+                </a>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
