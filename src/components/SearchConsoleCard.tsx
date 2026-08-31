@@ -117,7 +117,7 @@ export function SearchConsoleCard({ projectId }: { projectId: string }) {
         {options.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium">연결할 속성</p>
-            <Select value={selected} onValueChange={(v) => save.mutate(v)}>
+            <Select {...(selected ? { value: selected } : {})} onValueChange={(v) => save.mutate(v)}>
               <SelectTrigger className="max-w-md">
                 <SelectValue placeholder="Search Console 속성을 선택하세요" />
               </SelectTrigger>
