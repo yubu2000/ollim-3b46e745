@@ -118,25 +118,52 @@ function AppLayout() {
               </Button>
             </div>
           </div>
-          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2">
-            {[
-              ...nav,
-              ...(adminStatus.data?.admin
-                ? [{ to: "/app/admin", label: "마스터 관리자", icon: ShieldCheck, exact: false } as const]
-                : []),
-            ].map((n) => (
+          <nav className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-3 pb-2">
+            <Link
+              to="/app"
+              activeOptions={{ exact: true }}
+              className={navLinkClass}
+              activeProps={{ className: "bg-accent text-accent-foreground font-medium" }}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              대시보드
+            </Link>
+
+            {navGroups.map((group) => (
+              <DropdownMenu key={group.label}>
+                <DropdownMenuTrigger className={navLinkClass}>
+                  <group.icon className="h-4 w-4" />
+                  {group.label}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  {group.items.map((item) => (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link
+                        to={item.to}
+                        activeOptions={{ exact: item.exact }}
+                        activeProps={{ className: "font-medium text-accent-foreground" }}
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ))}
+
+            {adminStatus.data?.admin && (
               <Link
-                key={n.to}
-                to={n.to}
-                activeOptions={{ exact: n.exact }}
-                className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary"
+                to="/app/admin"
+                className={navLinkClass}
                 activeProps={{ className: "bg-accent text-accent-foreground font-medium" }}
               >
-                <n.icon className="h-4 w-4" />
-                {n.label}
+                <ShieldCheck className="h-4 w-4" />
+                마스터 관리자
               </Link>
-            ))}
+            )}
           </nav>
+
         </header>
         <main className="mx-auto max-w-6xl px-5 py-8">
           <Outlet />
