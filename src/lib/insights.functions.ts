@@ -238,7 +238,92 @@ export const renderArticleHtml = createServerFn({ method: "POST" })
     };
   });
 
-/** Publish a generated draft to the connected WordPress blog. */
+const imageInput = z
+  .array(
+    z.object({
+      dataUrl: z.string().optional(),
+      url: z.string().optional(),
+      alt: z.string().optional(),
+      filename: z.string().optional(),
+    }),
+  )
+  .default([]);
+
+/** The member's own WordPress connection (application password is never returned). */
+export const getWordPressSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await (context.supabase as never as ReturnType<typeof Object>)
+      .from("wordpress_sites")
+      .select("site_url, username, default_status, last_checked_at, last_check_ok")
+      .maybeSingle();
+    return (data ?? null) as {
+      site_url: string;
+      username: string;
+      default_status: string;
+      last_checked_at: string | null;
+      last_check_ok: boolean | null;
+    } | null;
+  });
+
+export const saveWordPressSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        siteUrl: z.string().min(4),
+        username: z.string().min(1),
+        appPassword: z.string().min(6),
+        defaultStatus: z.enum(["draft", "publish"]).default("draft"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { testUserSite } = await import("./wordpress.server");
+    const site = {
+      site_url: data.siteUrl,
+      username: data.username,
+      app_password: data.appPassword,
+    };
+    const check = await testUserSite(site);
+
+    const { error } = await (context.supabase as never as ReturnType<typeof Object>)
+      .from("wordpress_sites")
+      .upsert(
+        {
+          user_id: context.userId,
+          ...site,
+          default_status: data.defaultStatus,
+          last_checked_at: new Date().toISOString(),
+          last_check_ok: true,
+        },
+        { onConflict: "user_id" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true, name: check.name };
+  });
+
+export const deleteWordPressSite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { error } = await (context.supabase as never as ReturnType<typeof Object>)
+      .from("wordpress_sites")
+      .delete()
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Generate an illustration for a draft; returned as a data URL for preview + upload. */
+export const createArticleImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ prompt: z.string().min(2) }).parse(input))
+  .handler(async ({ data }) => {
+    const { generateArticleImage } = await import("./image.server");
+    return await generateArticleImage(data.prompt);
+  });
+
+/** Publish a generated draft to the member's own WordPress blog (falls back to the shared connector). */
 export const publishArticleToWordPress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -250,11 +335,18 @@ export const publishArticleToWordPress = createServerFn({ method: "POST" })
         faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
         jsonld: z.string().optional(),
         status: z.enum(["draft", "publish"]).default("draft"),
+        images: imageInput,
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
-    const { articleToHtml, publishPost } = await import("./wordpress.server");
+  .handler(async ({ data, context }) => {
+    const {
+      articleToHtml,
+      publishPost,
+      publishToUserSite,
+      uploadMediaToUserSite,
+    } = await import("./wordpress.server");
+
     let ld: unknown = undefined;
     if (data.jsonld) {
       try {
@@ -263,30 +355,111 @@ export const publishArticleToWordPress = createServerFn({ method: "POST" })
         ld = undefined;
       }
     }
+
+    const { data: siteRow } = await (context.supabase as never as ReturnType<typeof Object>)
+      .from("wordpress_sites")
+      .select("site_url, username, app_password")
+      .maybeSingle();
+
+    // 회원 본인의 WordPress가 등록돼 있으면 그쪽으로 게시한다.
+    if (siteRow) {
+      const site = siteRow as { site_url: string; username: string; app_password: string };
+      const uploaded: { url: string; alt: string; id: number }[] = [];
+      for (const [i, img] of data.images.entries()) {
+        uploaded.push(
+          await uploadMediaToUserSite(site, {
+            ...(img.dataUrl ? { dataUrl: img.dataUrl } : {}),
+            ...(img.url ? { url: img.url } : {}),
+            alt: img.alt ?? data.title,
+            filename: img.filename ?? `${Date.now()}-${i + 1}`,
+          }),
+        );
+      }
+      const contentHtml = articleToHtml({
+        title: data.title,
+        markdown: data.markdown,
+        faq: data.faq,
+        images: uploaded.map((u) => ({ url: u.url, alt: u.alt })),
+        ...(ld ? { jsonld: ld } : {}),
+      });
+      const post = await publishToUserSite(site, {
+        title: data.title,
+        contentHtml,
+        excerpt: data.metaDescription,
+        status: data.status,
+        ...(uploaded[0] ? { featuredMediaId: uploaded[0].id } : {}),
+      });
+      return { ...post, target: site.site_url, images: uploaded.length };
+    }
+
     const contentHtml = articleToHtml({
       title: data.title,
       markdown: data.markdown,
       faq: data.faq,
+      images: data.images
+        .filter((i) => i.url)
+        .map((i) => ({ url: i.url!, alt: i.alt ?? data.title })),
       ...(ld ? { jsonld: ld } : {}),
     });
-    return await publishPost({
+    const post = await publishPost({
       title: data.title,
       contentHtml,
       excerpt: data.metaDescription,
       status: data.status,
     });
+    return { ...post, target: "관리자 WordPress", images: 0 };
   });
 
-/** Fetch a published URL and check it is live with canonical + valid JSON-LD. */
+/** Fetch a published URL, check canonical + JSON-LD, and record the result on the report. */
 export const verifyPublishedUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ url: z.string().min(4), expectTitle: z.string().optional() }).parse(input),
+    z
+      .object({
+        url: z.string().min(4),
+        expectTitle: z.string().optional(),
+        auditId: z.string().uuid().optional(),
+      })
+      .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { verifyPublishedPage } = await import("./publish-verify.server");
-    return await verifyPublishedPage(data.url, data.expectTitle ? { expectTitle: data.expectTitle } : {});
+    const result = await verifyPublishedPage(
+      data.url,
+      data.expectTitle ? { expectTitle: data.expectTitle } : {},
+    );
+
+    if (data.auditId) {
+      const { data: audit } = await context.supabase
+        .from("audits")
+        .select("id, project_id")
+        .eq("id", data.auditId)
+        .maybeSingle();
+      if (audit) {
+        await (context.supabase as never as ReturnType<typeof Object>)
+          .from("publish_verifications")
+          .insert({
+            user_id: context.userId,
+            audit_id: audit.id,
+            project_id: audit.project_id,
+            url: result.url,
+            final_url: result.finalUrl,
+            status: result.status,
+            reachable: result.reachable,
+            has_canonical: Boolean(result.canonical),
+            has_jsonld: result.jsonldTypes.length > 0,
+            canonical: result.canonical,
+            jsonld_types: result.jsonldTypes,
+            passed_count: result.checks.filter((c) => c.passed).length,
+            total_count: result.checks.length,
+            checks: result.checks,
+          });
+      }
+    }
+
+    return result;
   });
+
 
 /** Auto-generate FAQ/Article/Organization JSON-LD from a page and validate it. */
 export const generateSchemas = createServerFn({ method: "POST" })
