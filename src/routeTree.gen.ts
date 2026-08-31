@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppCompetitorsRouteImport } from './routes/app.competitors'
 import { Route as AppMentionsRouteImport } from './routes/app.mentions'
 import { Route as AppOptimizeRouteImport } from './routes/app.optimize'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
@@ -36,6 +37,11 @@ const AuthRoute = AuthRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCompetitorsRoute = AppCompetitorsRouteImport.update({
+  id: '/competitors',
+  path: '/competitors',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMentionsRoute = AppMentionsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/app/competitors': typeof AppCompetitorsRoute
   '/app/mentions': typeof AppMentionsRoute
   '/app/optimize': typeof AppOptimizeRoute
   '/app/reports': typeof AppReportsRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/competitors'
     | '/app/mentions'
     | '/app/optimize'
     | '/app/reports'
@@ -157,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/competitors': {
+      id: '/app/competitors'
+      path: '/competitors'
+      fullPath: '/app/competitors'
+      preLoaderRoute: typeof AppCompetitorsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/mentions': {
       id: '/app/mentions'
       path: '/mentions'
@@ -189,6 +208,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppCompetitorsRoute: typeof AppCompetitorsRoute
   AppMentionsRoute: typeof AppMentionsRoute
   AppOptimizeRoute: typeof AppOptimizeRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -197,6 +217,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCompetitorsRoute: AppCompetitorsRoute,
   AppMentionsRoute: AppMentionsRoute,
   AppOptimizeRoute: AppOptimizeRoute,
   AppReportsRoute: AppReportsRoute,

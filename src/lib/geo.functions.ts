@@ -18,6 +18,9 @@ export const runAudit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertQuota, consume } = await import("./billing.server");
+    const { checkAuditAlert } = await import("./alerts.server");
+    await assertQuota(userId, "audit");
 
     const { data: project, error: projectError } = await supabase
       .from("projects")
@@ -32,6 +35,7 @@ export const runAudit = createServerFn({ method: "POST" })
     const seo = score(items, "SEO");
     const geo = score(items, "GEO");
     const summary = await summarize(url, items, project.brand_name);
+
 
     const { data: audit, error } = await supabase
       .from("audits")
@@ -63,8 +67,12 @@ export const runAudit = createServerFn({ method: "POST" })
     );
     if (itemsError) throw new Error(itemsError.message);
 
+    await consume(userId, "audit");
+    await checkAuditAlert(project.id, project.name, geo, url);
+
     return { auditId: audit.id, seo, geo };
   });
+
 
 export const runMentionCheck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -73,6 +81,9 @@ export const runMentionCheck = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertQuota, consume } = await import("./billing.server");
+    const { checkMentionAlert } = await import("./alerts.server");
+    await assertQuota(userId, "mention");
 
     const { data: project } = await supabase
       .from("projects")
@@ -88,7 +99,29 @@ export const runMentionCheck = createServerFn({ method: "POST" })
     if (!prompts || prompts.length === 0)
       throw new Error("추적할 질문을 먼저 추가해 주세요.");
 
+    const { data: rivalSites } = await supabase
+      .from("competitor_sites")
+      .select("name")
+      .eq("project_id", project.id);
+    const rivals = [
+      ...(project.competitors ?? []),
+      ...(rivalSites ?? []).map((r) => r.name),
+    ].filter((v, i, arr) => v && arr.indexOf(v) === i);
+
+    const { data: previous } = await supabase
+      .from("mention_runs")
+      .select("mentioned, created_at")
+      .eq("project_id", project.id)
+      .order("created_at", { ascending: false })
+      .limit(prompts.length * MENTION_MODELS.length);
+    const previousRate =
+      previous && previous.length > 0
+        ? Math.round((previous.filter((p) => p.mentioned).length / previous.length) * 100)
+        : null;
+
     const rows: Record<string, unknown>[] = [];
+
+
 
     for (const prompt of prompts) {
       for (const model of MENTION_MODELS) {
@@ -101,7 +134,7 @@ export const runMentionCheck = createServerFn({ method: "POST" })
             },
             { role: "user", content: prompt.text },
           ]);
-          const result = analyzeMention(answer, project.brand_name, project.competitors ?? []);
+          const result = analyzeMention(answer, project.brand_name, rivals);
           rows.push({
             prompt_id: prompt.id,
             project_id: project.id,
@@ -134,7 +167,15 @@ export const runMentionCheck = createServerFn({ method: "POST" })
     const { error } = await supabase.from("mention_runs").insert(rows as never);
     if (error) throw new Error(error.message);
 
+    await consume(userId, "mention");
+    const currentRate =
+      rows.length === 0
+        ? 0
+        : Math.round((rows.filter((r) => r["mentioned"] === true).length / rows.length) * 100);
+    await checkMentionAlert(project.id, project.name, currentRate, previousRate);
+
     return { runs: rows.length };
+
   });
 
 export const optimizeContent = createServerFn({ method: "POST" })
