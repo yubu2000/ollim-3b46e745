@@ -147,17 +147,25 @@ export function ArticleWriter({
           faq: draft.faq,
           jsonld: draft.jsonld,
           status,
+          images: images.map((i) => ({ dataUrl: i.dataUrl, alt: i.alt, filename: i.filename })),
         },
-      })) as unknown as { id: number | null; link: string | null; status: string };
+      })) as unknown as {
+        id: number | null;
+        link: string | null;
+        status: string;
+        target: string;
+        images: number;
+      };
     },
     onSuccess: (r) => {
       if (r.link) setPublishedUrl(r.link);
       toast.success(
         r.status === "publish"
-          ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
-          : "WordPress에 임시글(draft)로 저장했습니다.",
+          ? `${r.target}에 게시했습니다.${r.images ? ` 이미지 ${r.images}장 포함.` : ""}${r.link ? ` (${r.link})` : ""}`
+          : `${r.target}에 임시글(draft)로 저장했습니다.`,
       );
     },
+
     onError: (e: Error) => toast.error(e.message),
   });
 
