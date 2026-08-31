@@ -206,7 +206,7 @@ export function buildSchemas(src: SchemaSource) {
         .filter((h) => /\?|나요|까요|인가요|하나요/.test(h))
         .slice(0, 6)
         .map((h) => ({ question: h, answer: "" }))
-  ).filter((q) => q.question);
+  ).filter((q) => q.question && q.answer.trim().length > 0);
 
   const faqPage =
     questions.length > 0
