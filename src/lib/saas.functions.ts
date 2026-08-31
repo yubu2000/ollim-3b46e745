@@ -5,14 +5,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const getBilling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { getPlan, getUsage } = await import("./billing.server");
-    const { PLANS } = await import("./plans");
-    const [plan, usage] = await Promise.all([getPlan(context.userId), getUsage(context.userId)]);
+    const { getLimits, getUsage } = await import("./billing.server");
+    const [limits, usage] = await Promise.all([getLimits(context.userId), getUsage(context.userId)]);
+    const plan = limits.plan;
     return {
       plan,
       usage,
-      limits: { audit: PLANS[plan].audits, mention: PLANS[plan].mentions },
-      exports: PLANS[plan].exports,
+      limits: { audit: limits.audit, mention: limits.mention },
+      overridden: limits.overridden,
+      exports: limits.exports,
       stripeReady: Boolean(process.env["STRIPE_SECRET_KEY"]),
     };
   });
