@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
-import { createShareLink, revokeShareLink } from "@/lib/saas.functions";
+import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
@@ -42,6 +42,9 @@ function AuditDetail() {
   });
 
   const queryClient = useQueryClient();
+  const billingFn = useServerFn(getBilling);
+  const billing = useQuery({ queryKey: ["billing"], queryFn: () => billingFn({ data: undefined }) });
+  const canExport = billing.data?.exports ?? false;
   const share = useServerFn(createShareLink);
   const revoke = useServerFn(revokeShareLink);
 
@@ -94,7 +97,15 @@ function AuditDetail() {
           <p className="break-all text-sm text-muted-foreground">{data.audit.target_url}</p>
         </div>
         <div className="flex gap-2 print:hidden">
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              canExport
+                ? window.print()
+                : toast.error("PDF 내보내기와 공유 링크는 Pro 플랜부터 사용할 수 있습니다.")
+            }
+          >
             <Printer className="mr-1 h-4 w-4" /> PDF 저장
           </Button>
           <Button size="sm" onClick={() => createLink.mutate()} disabled={createLink.isPending}>
