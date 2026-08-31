@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Lightbulb, Loader2, RefreshCw, Sparkles } from "lucide-react";
@@ -6,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArticleWriter } from "@/components/ArticleWriter";
+import { supabase } from "@/integrations/supabase/client";
 import { getKeywordSuggestions } from "@/lib/insights.functions";
+
 
 type KeywordIdea = {
   keyword: string;
