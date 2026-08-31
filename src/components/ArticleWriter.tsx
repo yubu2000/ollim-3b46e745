@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Copy, Download, Loader2, PenLine } from "lucide-react";
+import { Code2, Copy, Download, Loader2, PenLine, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { generateArticle } from "@/lib/insights.functions";
+import {
+  generateArticle,
+  publishArticleToWordPress,
+  renderArticleHtml,
+} from "@/lib/insights.functions";
 
 type Draft = {
   title: string;
@@ -41,7 +45,10 @@ export function ArticleWriter({
   const [open, setOpen] = useState(false);
   const [length, setLength] = useState<"short" | "medium" | "long">("medium");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [html, setHtml] = useState<string | null>(null);
   const fn = useServerFn(generateArticle);
+  const renderFn = useServerFn(renderArticleHtml);
+  const publishFn = useServerFn(publishArticleToWordPress);
 
   const gen = useMutation({
     mutationFn: async () =>
@@ -50,7 +57,52 @@ export function ArticleWriter({
       })) as unknown as Draft,
     onSuccess: (d) => {
       setDraft(d);
+      setHtml(null);
       toast.success("글 초안을 생성했습니다.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toHtml = useMutation({
+    mutationFn: async () => {
+      if (!draft) throw new Error("먼저 초안을 생성해 주세요.");
+      const res = (await renderFn({
+        data: {
+          title: draft.title,
+          markdown: draft.markdown,
+          faq: draft.faq,
+          jsonld: draft.jsonld,
+        },
+      })) as unknown as { html: string };
+      return res.html;
+    },
+    onSuccess: (h) => {
+      setHtml(h);
+      toast.success("HTML로 변환했습니다. 아래에서 복사하거나 저장하세요.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const publish = useMutation({
+    mutationFn: async (status: "draft" | "publish") => {
+      if (!draft) throw new Error("먼저 초안을 생성해 주세요.");
+      return (await publishFn({
+        data: {
+          title: draft.title,
+          markdown: draft.markdown,
+          metaDescription: draft.metaDescription,
+          faq: draft.faq,
+          jsonld: draft.jsonld,
+          status,
+        },
+      })) as unknown as { id: number | null; link: string | null; status: string };
+    },
+    onSuccess: (r) => {
+      toast.success(
+        r.status === "publish"
+          ? `WordPress에 게시했습니다.${r.link ? ` (${r.link})` : ""}`
+          : "WordPress에 임시글(draft)로 저장했습니다.",
+      );
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -61,14 +113,17 @@ export function ArticleWriter({
         .join("\n\n")}\n`
     : "";
 
-  function download() {
-    const blob = new Blob([fullText], { type: "text/markdown;charset=utf-8" });
+  const safeName = title.replace(/[\\/:*?"<>|]/g, "-").slice(0, 60);
+
+  function downloadFile(content: string, ext: string, mime: string) {
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${title.replace(/[\\/:*?"<>|]/g, "-").slice(0, 60)}.md`;
+    a.download = `${safeName}.${ext}`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
+
 
   return (
     <>
@@ -119,16 +174,54 @@ export function ArticleWriter({
                   variant="outline"
                   onClick={() => {
                     void navigator.clipboard.writeText(fullText);
-                    toast.success("본문을 복사했습니다.");
+                    toast.success("마크다운 본문을 복사했습니다.");
                   }}
                 >
-                  <Copy className="mr-1 h-4 w-4" /> 복사
+                  <Copy className="mr-1 h-4 w-4" /> 마크다운 복사
                 </Button>
-                <Button size="sm" variant="outline" onClick={download}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => downloadFile(fullText, "md", "text/markdown")}
+                >
                   <Download className="mr-1 h-4 w-4" /> .md 저장
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={toHtml.isPending}
+                  onClick={() => toHtml.mutate()}
+                >
+                  {toHtml.isPending ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Code2 className="mr-1 h-4 w-4" />
+                  )}
+                  HTML로 변환
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={publish.isPending}
+                  onClick={() => publish.mutate("publish")}
+                >
+                  {publish.isPending ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-1 h-4 w-4" />
+                  )}
+                  WordPress에 배포하기
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={publish.isPending}
+                  onClick={() => publish.mutate("draft")}
+                >
+                  WordPress 임시저장
                 </Button>
               </>
             )}
+
           </div>
 
           {gen.isPending && !draft && (
@@ -151,6 +244,37 @@ export function ArticleWriter({
                 readOnly
                 className="min-h-[380px] font-mono text-xs leading-relaxed"
               />
+
+              {html && (
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium">HTML (관리자 화면에 그대로 붙여넣기)</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(html);
+                        toast.success("HTML을 복사했습니다.");
+                      }}
+                    >
+                      <Copy className="mr-1 h-4 w-4" /> HTML 복사
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => downloadFile(html, "html", "text/html")}
+                    >
+                      <Download className="mr-1 h-4 w-4" /> .html 저장
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={html}
+                    readOnly
+                    className="min-h-[260px] font-mono text-xs leading-relaxed"
+                  />
+                </div>
+              )}
+
 
               <details className="rounded-lg border border-border p-3 text-sm">
                 <summary className="cursor-pointer font-medium">

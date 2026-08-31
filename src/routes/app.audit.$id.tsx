@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, CheckCircle2, Copy, Link2, Loader2, Printer, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Link2, Loader2, Printer, Wrench, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
 import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
 import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
+import { FIX_GUIDES } from "@/lib/fix-guides";
 
 export const Route = createFileRoute("/app/audit/$id")({
   component: AuditDetail,
@@ -215,34 +216,77 @@ function ItemList({ title, items }: { title: string; items: Item[] }) {
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {items.map((i) => (
-          <div key={i.id} className="rounded-lg border border-border p-4">
-            <div className="flex items-start gap-3">
-              {i.passed ? (
-                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--chart-2)]" />
-              ) : (
-                <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{i.title}</span>
-                  {!i.passed && (
-                    <Badge variant={i.severity === "high" ? "destructive" : "secondary"}>
-                      {i.severity === "high" ? "높음" : i.severity === "medium" ? "보통" : "낮음"}
-                    </Badge>
+        {items.map((i) => {
+          const guide = FIX_GUIDES[i.title];
+          return (
+            <div key={i.id} className="rounded-lg border border-border p-4">
+              <div className="flex items-start gap-3">
+                {i.passed ? (
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--chart-2)]" />
+                ) : (
+                  <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{i.title}</span>
+                    {!i.passed && (
+                      <Badge variant={i.severity === "high" ? "destructive" : "secondary"}>
+                        {i.severity === "high" ? "높음" : i.severity === "medium" ? "보통" : "낮음"}
+                      </Badge>
+                    )}
+                  </div>
+                  {i.evidence && (
+                    <p className="mt-1 break-words text-xs text-muted-foreground">{i.evidence}</p>
+                  )}
+                  {!i.passed && i.recommendation && (
+                    <p className="mt-2 text-sm">{i.recommendation}</p>
+                  )}
+
+                  {!i.passed && guide && (
+                    <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3">
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <Wrench className="h-4 w-4" /> 개선 방법
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">{guide.why}</p>
+                      <ol className="mt-2 space-y-1 text-sm">
+                        {guide.steps.map((s, idx) => (
+                          <li key={idx}>
+                            {idx + 1}. {s}
+                          </li>
+                        ))}
+                      </ol>
+                      {guide.snippet && (
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-medium text-muted-foreground">
+                              붙여넣을 코드
+                            </p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="print:hidden"
+                              onClick={() => {
+                                void navigator.clipboard.writeText(guide.snippet ?? "");
+                                toast.success("코드를 복사했습니다.");
+                              }}
+                            >
+                              <Copy className="mr-1 h-3.5 w-3.5" /> 복사
+                            </Button>
+                          </div>
+                          <pre className="mt-1 overflow-x-auto rounded-md bg-background p-3 text-xs leading-relaxed">
+                            {guide.snippet}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-                {i.evidence && (
-                  <p className="mt-1 break-words text-xs text-muted-foreground">{i.evidence}</p>
-                )}
-                {!i.passed && i.recommendation && (
-                  <p className="mt-2 text-sm">{i.recommendation}</p>
-                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );
 }
+
