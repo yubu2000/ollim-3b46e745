@@ -203,6 +203,18 @@ function AuditDetail() {
 
       <KeywordSuggestionsCard auditId={id} />
 
+      <SchemaStudio auditId={id} />
+
+      <Card className="print:hidden">
+        <CardHeader>
+          <CardTitle className="text-base">게시 검증 (실제 노출 · canonical · JSON-LD)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PublishVerifier defaultUrl={data.audit.target_url} />
+        </CardContent>
+      </Card>
+
+
       <ItemList title="GEO 항목 (AI 답변 인용 최적화)" items={geo} />
       <ItemList title="SEO 항목 (검색엔진 최적화)" items={seo} />
     </div>
