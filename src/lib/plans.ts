@@ -6,6 +6,8 @@ export type PlanSpec = {
   price: number; // KRW / month
   audits: number;
   mentions: number;
+  /** Monthly AI credits: 리서치·초안·재작성·이미지 생성에 소모 */
+  aiCredits: number;
   exports: boolean;
   blurb: string;
   features: string[];
