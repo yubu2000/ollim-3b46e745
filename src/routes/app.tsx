@@ -1,6 +1,17 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { BarChart3, Bot, LayoutDashboard, LogOut, Sparkles, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  BellRing,
+  Bot,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Sparkles,
+  Swords,
+  TrendingUp,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Select,
