@@ -136,6 +136,7 @@ function CompetitorsPage() {
     seo_score: number;
     geo_score: number;
     items: unknown;
+    metrics?: unknown;
   };
   const latest = new Map<string, AuditRow>();
   for (const row of (audits.data ?? []) as AuditRow[])
@@ -144,6 +145,36 @@ function CompetitorsPage() {
 
 
   const scoreData = rows.map((r) => ({ name: r.label, SEO: r.seo_score, GEO: r.geo_score }));
+
+  type KeywordStat = { term: string; count: number; density: number; inTitle: boolean };
+  type Metrics = {
+    chars?: number;
+    words?: number;
+    paragraphs?: number;
+    headings?: number;
+    images?: number;
+    internalLinks?: number;
+    externalLinks?: number;
+    totalLinks?: number;
+    linksPer1000Words?: number;
+    jsonLdBlocks?: number;
+    keywords?: KeywordStat[];
+  };
+  const metricRows = rows.map((r) => ({ row: r, m: (r.metrics ?? {}) as Metrics }));
+  const hasMetrics = metricRows.some((x) => typeof x.m.chars === "number");
+  const metricDefs: { key: keyof Metrics; label: string; suffix?: string }[] = [
+    { key: "chars", label: "콘텐츠 길이", suffix: "자" },
+    { key: "words", label: "단어 수", suffix: "개" },
+    { key: "paragraphs", label: "문단 수", suffix: "개" },
+    { key: "headings", label: "제목 태그 수", suffix: "개" },
+    { key: "internalLinks", label: "내부 링크", suffix: "개" },
+    { key: "externalLinks", label: "외부 링크", suffix: "개" },
+    { key: "totalLinks", label: "전체 링크", suffix: "개" },
+    { key: "linksPer1000Words", label: "링크 빈도(1,000단어당)", suffix: "개" },
+    { key: "images", label: "이미지 수", suffix: "개" },
+    { key: "jsonLdBlocks", label: "구조화 데이터 블록", suffix: "개" },
+  ];
+
 
   const checkTitles = [
     ...new Set(
