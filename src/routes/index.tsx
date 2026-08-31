@@ -66,7 +66,7 @@ function Landing() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
               <TrendingUp className="h-4 w-4" />
             </span>
-            GEO Radar
+            ollim Lab - 올림연구소
           </div>
           <Button asChild size="sm">
             <Link to={user ? "/app" : "/auth"}>{user ? "대시보드" : "무료로 시작"}</Link>
