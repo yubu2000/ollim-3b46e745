@@ -238,32 +238,15 @@ export const renderArticleHtml = createServerFn({ method: "POST" })
     };
   });
 
-const imageInput = z
-  .array(
-    z.object({
-      dataUrl: z.string().optional(),
-      url: z.string().optional(),
-      alt: z.string().optional(),
-      filename: z.string().optional(),
-    }),
-  )
-  .default([]);
-
 /** The member's own WordPress connection (application password is never returned). */
 export const getWordPressSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await (context.supabase as never as ReturnType<typeof Object>)
+    const { data } = await context.supabase
       .from("wordpress_sites")
       .select("site_url, username, default_status, last_checked_at, last_check_ok")
       .maybeSingle();
-    return (data ?? null) as {
-      site_url: string;
-      username: string;
-      default_status: string;
-      last_checked_at: string | null;
-      last_check_ok: boolean | null;
-    } | null;
+    return data ?? null;
   });
 
 export const saveWordPressSite = createServerFn({ method: "POST" })
@@ -287,18 +270,16 @@ export const saveWordPressSite = createServerFn({ method: "POST" })
     };
     const check = await testUserSite(site);
 
-    const { error } = await (context.supabase as never as ReturnType<typeof Object>)
-      .from("wordpress_sites")
-      .upsert(
-        {
-          user_id: context.userId,
-          ...site,
-          default_status: data.defaultStatus,
-          last_checked_at: new Date().toISOString(),
-          last_check_ok: true,
-        },
-        { onConflict: "user_id" },
-      );
+    const { error } = await context.supabase.from("wordpress_sites").upsert(
+      {
+        user_id: context.userId,
+        ...site,
+        default_status: data.defaultStatus,
+        last_checked_at: new Date().toISOString(),
+        last_check_ok: true,
+      },
+      { onConflict: "user_id" },
+    );
     if (error) throw new Error(error.message);
     return { ok: true, name: check.name };
   });
@@ -306,13 +287,14 @@ export const saveWordPressSite = createServerFn({ method: "POST" })
 export const deleteWordPressSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { error } = await (context.supabase as never as ReturnType<typeof Object>)
+    const { error } = await context.supabase
       .from("wordpress_sites")
       .delete()
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 /** Generate an illustration for a draft; returned as a data URL for preview + upload. */
 export const createArticleImage = createServerFn({ method: "POST" })
