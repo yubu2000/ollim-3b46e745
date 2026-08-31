@@ -302,11 +302,69 @@ export function ArticleWriter({
                 <p className="mt-1 text-xs text-muted-foreground">약 {draft.wordCount} 단어</p>
               </div>
 
+              <div className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium">본문 이미지</p>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      void addFiles(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                    <ImagePlus className="mr-1 h-4 w-4" /> 파일 첨부
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={makeImage.isPending}
+                    onClick={() => makeImage.mutate()}
+                  >
+                    {makeImage.isPending ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-1 h-4 w-4" />
+                    )}
+                    AI 이미지 생성
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  첫 번째 이미지는 대표 이미지로, 나머지는 소제목 사이에 자동 삽입됩니다.
+                </p>
+                {images.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {images.map((img, i) => (
+                      <div key={i} className="relative">
+                        <img
+                          src={img.dataUrl}
+                          alt={img.alt}
+                          className="h-24 w-32 rounded-md border border-border object-cover"
+                        />
+                        <button
+                          type="button"
+                          aria-label="이미지 제거"
+                          className="absolute -right-2 -top-2 rounded-full bg-secondary p-1 text-secondary-foreground shadow"
+                          onClick={() => setImages((prev) => prev.filter((_, x) => x !== i))}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <Textarea
                 value={fullText}
                 readOnly
                 className="min-h-[380px] font-mono text-xs leading-relaxed"
               />
+
 
               {html && (
                 <div className="space-y-2">
