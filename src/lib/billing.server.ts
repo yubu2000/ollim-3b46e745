@@ -2,7 +2,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { PLANS, planOf, type PlanId } from "./plans";
 
-export type UsageKind = "audit" | "mention";
+export type UsageKind = "audit" | "mention" | "ai";
 
 export function currentPeriod() {
   return new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -27,13 +27,13 @@ export async function getUsage(userId: string) {
     .eq("period", currentPeriod());
   const rows = data ?? [];
   const of = (kind: UsageKind) => rows.find((r) => r.kind === kind)?.count ?? 0;
-  return { audit: of("audit"), mention: of("mention") };
+  return { audit: of("audit"), mention: of("mention"), ai: of("ai") };
 }
 
 async function getOverride(userId: string) {
   const { data } = await supabaseAdmin
     .from("plan_overrides")
-    .select("audits, mentions, exports")
+    .select("audits, mentions, exports, ai_credits")
     .eq("user_id", userId)
     .maybeSingle();
   return data ?? null;
@@ -46,6 +46,7 @@ export async function getLimits(userId: string) {
     plan,
     audit: override?.audits ?? PLANS[plan].audits,
     mention: override?.mentions ?? PLANS[plan].mentions,
+    ai: override?.ai_credits ?? PLANS[plan].aiCredits,
     exports: override?.exports ?? PLANS[plan].exports,
     overridden: Boolean(override),
   };
@@ -55,12 +56,13 @@ export async function getLimits(userId: string) {
 export async function assertQuota(userId: string, kind: UsageKind, amount = 1) {
   const [limits, usage] = await Promise.all([getLimits(userId), getUsage(userId)]);
   const plan = limits.plan;
-  const limit = kind === "audit" ? limits.audit : limits.mention;
+  const limit = kind === "audit" ? limits.audit : kind === "mention" ? limits.mention : limits.ai;
   const used = usage[kind];
   if (used + amount > limit) {
-    const name = kind === "audit" ? "진단" : "멘션 체크";
+    const name = kind === "audit" ? "진단" : kind === "mention" ? "멘션 체크" : "AI 크레딧";
+    const unit = kind === "ai" ? "크레딧" : "회";
     throw new Error(
-      `이번 달 ${name} 한도(${limit}회)를 모두 사용했습니다. 요금제 페이지에서 플랜을 업그레이드해 주세요.`,
+      `이번 달 ${name} 한도(${limit}${unit})를 모두 사용했습니다. 요금제 페이지에서 플랜을 업그레이드해 주세요.`,
     );
   }
   return { plan, used, limit };
@@ -93,4 +95,12 @@ export async function assertExportAllowed(userId: string) {
     throw new Error("PDF 내보내기와 공유 링크는 Pro 플랜부터 사용할 수 있습니다.");
   }
   return plan;
+}
+
+/** AI 작업 전용 헬퍼: 실행 전 크레딧을 확인하고, 성공 후 차감합니다. */
+export async function withAiCredits<T>(userId: string, cost: number, run: () => Promise<T>): Promise<T> {
+  await assertQuota(userId, "ai", cost);
+  const result = await run();
+  await consume(userId, "ai", cost);
+  return result;
 }
