@@ -86,7 +86,7 @@ function Landing() {
             그 답변에 내 브랜드가 있나요?
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            GEO Radar는 내 페이지가 AI에게 인용되기 좋은 구조인지 진단하고, 실제 AI 모델들이 내
+            '올림연구소'는 내 페이지가 AI에게 인용되기 좋은 구조인지 진단하고, 실제 AI 모델들이 내
             브랜드를 언급하는지 주기적으로 추적합니다.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
