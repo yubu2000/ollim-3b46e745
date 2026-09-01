@@ -254,7 +254,12 @@ function ProjectDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="reviews" className="mt-4">
+          <ReviewSignalsCard projectId={id} />
+        </TabsContent>
       </Tabs>
     </div>
   );
+
 }
