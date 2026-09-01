@@ -14,5 +14,6 @@ export const getKeywordResearch = createServerFn({ method: "POST" })
     const { AI_COST } = await import("./plans");
     return await withAiCredits(context.userId, AI_COST.research, () =>
       researchKeyword(data.keyword.trim()),
+      { action: "research", detail: data.keyword.trim() },
     );
   });

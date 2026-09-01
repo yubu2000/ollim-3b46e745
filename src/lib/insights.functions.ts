@@ -310,7 +310,10 @@ export const createArticleImage = createServerFn({ method: "POST" })
     const { generateArticleImage } = await import("./image.server");
     const { withAiCredits } = await import("./billing.server");
     const { AI_COST } = await import("./plans");
-    return await withAiCredits(context.userId, AI_COST.image, () => generateArticleImage(data.prompt));
+    return await withAiCredits(context.userId, AI_COST.image, () => generateArticleImage(data.prompt), {
+      action: "image",
+      detail: data.prompt.slice(0, 120),
+    });
   });
 
 /** Publish a generated draft to the member's own WordPress blog (falls back to the shared connector). */
@@ -571,6 +574,7 @@ export const getVerifiedContentSuggestions = createServerFn({ method: "POST" })
         siteUrl: project?.site_url ?? audit.target_url,
         pages,
       }),
+      { action: "suggestions", projectId: audit.project_id, detail: "후속 콘텐츠 제안" },
     );
     return { pages, suggestions, note: "" };
   });
