@@ -124,7 +124,9 @@ function ProjectDetail() {
           <TabsTrigger value="usage">사용량 · 한도</TabsTrigger>
           <TabsTrigger value="credits">AI 크레딧 내역</TabsTrigger>
           <TabsTrigger value="trust">신뢰 태그</TabsTrigger>
+          <TabsTrigger value="reviews">평점 · 리뷰</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="history" className="mt-4">
           <Card>
