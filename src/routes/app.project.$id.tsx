@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReviewSignalsCard } from "@/components/ReviewSignalsCard";
 import { getProjectOverview, getTrustTags } from "@/lib/project.functions";
+
 
 export const Route = createFileRoute("/app/project/$id")({
   component: ProjectDetail,
@@ -124,7 +126,9 @@ function ProjectDetail() {
           <TabsTrigger value="usage">사용량 · 한도</TabsTrigger>
           <TabsTrigger value="credits">AI 크레딧 내역</TabsTrigger>
           <TabsTrigger value="trust">신뢰 태그</TabsTrigger>
+          <TabsTrigger value="reviews">평점 · 리뷰</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="history" className="mt-4">
           <Card>
@@ -252,7 +256,12 @@ function ProjectDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="reviews" className="mt-4">
+          <ReviewSignalsCard projectId={id} />
+        </TabsContent>
       </Tabs>
     </div>
   );
+
 }
