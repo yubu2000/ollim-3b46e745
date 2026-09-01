@@ -198,6 +198,35 @@ function AutoAuditCard() {
   );
 }
 
+function ProjectListCard() {
+  const { projects, project, selectProject } = useProjects();
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">내 프로젝트 ({projects.length})</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {projects.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => selectProject(p.id)}
+            className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+              p.id === project?.id ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary"
+            }`}
+          >
+            <span className="truncate pr-3">
+              <span className="font-medium">{p.name}</span>
+              <span className="ml-2 text-xs text-muted-foreground">{p.site_url}</span>
+            </span>
+            {p.id === project?.id && <Badge variant="secondary">선택됨</Badge>}
+          </button>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 function ProjectDashboard() {
   const { project } = useProjects();
   const navigate = useNavigate();
