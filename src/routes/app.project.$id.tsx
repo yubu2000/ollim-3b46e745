@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReviewSignalsCard } from "@/components/ReviewSignalsCard";
 import { getProjectOverview, getTrustTags } from "@/lib/project.functions";
+
 
 export const Route = createFileRoute("/app/project/$id")({
   component: ProjectDetail,
