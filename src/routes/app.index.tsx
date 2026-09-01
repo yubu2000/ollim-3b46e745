@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
 import { runAudit } from "@/lib/geo.functions";
+import { getProjectsSummary } from "@/lib/project.functions";
 import { ScoreRing } from "@/components/ScoreRing";
 import { SearchConsoleCard } from "@/components/SearchConsoleCard";
 
