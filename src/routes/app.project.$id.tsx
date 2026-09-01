@@ -160,9 +160,9 @@ function ProjectDetail() {
               <CardTitle className="text-base">{d.period} 계정 사용량</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <UsageBar label="진단" used={d.usage.audits} total={d.limits.audits} />
-              <UsageBar label="멘션 체크" used={d.usage.mentions} total={d.limits.mentions} />
-              <UsageBar label="AI 크레딧" used={d.usage.ai} total={d.limits.aiCredits} />
+              <UsageBar label="진단" used={d.usage.audit} total={d.limits.audit} />
+              <UsageBar label="멘션 체크" used={d.usage.mention} total={d.limits.mention} />
+              <UsageBar label="AI 크레딧" used={d.usage.ai} total={d.limits.ai} />
               <p className="text-xs text-muted-foreground">
                 한도는 계정 전체 기준이며 매월 1일(UTC)에 초기화됩니다. 이 프로젝트가 사용한 몫: 진단{" "}
                 {d.counts.auditsThisMonth}회 · 멘션 {d.counts.mentionsThisMonth}회 · AI {d.counts.aiCreditsThisMonth}크레딧

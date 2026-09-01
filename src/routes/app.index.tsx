@@ -207,7 +207,7 @@ function ProjectListCard() {
     queryFn: () => summaryFn({ data: undefined }),
   });
 
-  const stat = (id: string) => summary.data?.projects.find((p) => p.id === id);
+  const stat = (pid: string) => summary.data?.projects.find((p: { id: string }) => p.id === pid);
   const limits = summary.data?.limits;
   const usage = summary.data?.usage;
 
@@ -217,8 +217,8 @@ function ProjectListCard() {
         <CardTitle className="text-base">내 프로젝트 ({projects.length})</CardTitle>
         {limits && usage && (
           <p className="text-xs text-muted-foreground">
-            이번 달 계정 한도 · 진단 {usage.audits}/{limits.audits}회 · 멘션 {usage.mentions}/{limits.mentions}회 · AI{" "}
-            {usage.ai}/{limits.aiCredits}크레딧 (남은 진단 {Math.max(0, limits.audits - usage.audits)}회)
+            이번 달 계정 한도 · 진단 {usage.audit}/{limits.audit}회 · 멘션 {usage.mention}/{limits.mention}회 · AI{" "}
+            {usage.ai}/{limits.ai}크레딧 (남은 진단 {Math.max(0, limits.audit - usage.audit)}회)
           </p>
         )}
       </CardHeader>

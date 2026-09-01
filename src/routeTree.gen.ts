@@ -24,6 +24,7 @@ import { Route as AppResearchRouteImport } from './routes/app.research'
 import { Route as RTokenRouteImport } from './routes/r.$token'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AppAuditIdRouteImport } from './routes/app.audit.$id'
+import { Route as AppProjectIdRouteImport } from './routes/app.project.$id'
 import { Route as ApiPublicCronAutoAuditRouteImport } from './routes/api/public/cron/auto-audit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -101,6 +102,11 @@ const AppAuditIdRoute = AppAuditIdRouteImport.update({
   path: '/audit/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjectIdRoute = AppProjectIdRouteImport.update({
+  id: '/project/$id',
+  path: '/project/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiPublicCronAutoAuditRoute = ApiPublicCronAutoAuditRouteImport.update({
   id: '/api/public/cron/auto-audit',
   path: '/api/public/cron/auto-audit',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
+  '/app/project/$id': typeof AppProjectIdRoute
   '/api/public/cron/auto-audit': typeof ApiPublicCronAutoAuditRoute
 }
 export interface FileRoutesByTo {
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
+  '/app/project/$id': typeof AppProjectIdRoute
   '/api/public/cron/auto-audit': typeof ApiPublicCronAutoAuditRoute
 }
 export interface FileRoutesById {
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/app/audit/$id': typeof AppAuditIdRoute
+  '/app/project/$id': typeof AppProjectIdRoute
   '/api/public/cron/auto-audit': typeof ApiPublicCronAutoAuditRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/public/stripe-webhook'
     | '/app/audit/$id'
+    | '/app/project/$id'
     | '/api/public/cron/auto-audit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/public/stripe-webhook'
     | '/app/audit/$id'
+    | '/app/project/$id'
     | '/api/public/cron/auto-audit'
   id:
     | '__root__'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/public/stripe-webhook'
     | '/app/audit/$id'
+    | '/app/project/$id'
     | '/api/public/cron/auto-audit'
   fileRoutesById: FileRoutesById
 }
@@ -333,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAuditIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/project/$id': {
+      id: '/app/project/$id'
+      path: '/project/$id'
+      fullPath: '/app/project/$id'
+      preLoaderRoute: typeof AppProjectIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/public/cron/auto-audit': {
       id: '/api/public/cron/auto-audit'
       path: '/api/public/cron/auto-audit'
@@ -354,6 +373,7 @@ interface AppRouteChildren {
   AppResearchRoute: typeof AppResearchRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAuditIdRoute: typeof AppAuditIdRoute
+  AppProjectIdRoute: typeof AppProjectIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -367,6 +387,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppResearchRoute: AppResearchRoute,
   AppIndexRoute: AppIndexRoute,
   AppAuditIdRoute: AppAuditIdRoute,
+  AppProjectIdRoute: AppProjectIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
