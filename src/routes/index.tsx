@@ -94,7 +94,7 @@ function Landing() {
               <Link to={user ? "/app" : "/auth"}>지금 진단 시작하기</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/auth">데모 계정 만들기</Link>
+              <Link to="/auth">계정 만들기</Link>
             </Button>
           </div>
 
