@@ -49,8 +49,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (projects.length === 0) return;
+    if (selectedId && projects.some((p) => p.id === selectedId)) return;
     const stored = typeof window !== "undefined" ? localStorage.getItem("geo:project") : null;
-    const valid = projects.find((p) => p.id === (selectedId ?? stored));
+    const valid = projects.find((p) => p.id === stored);
     setSelectedId(valid ? valid.id : (projects[0]?.id ?? null));
   }, [projects, selectedId]);
 
