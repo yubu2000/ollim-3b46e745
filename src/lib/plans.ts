@@ -28,7 +28,7 @@ export const PLANS: Record<PlanId, PlanSpec> = {
   pro: {
     id: "pro",
     label: "Pro",
-    price: 29000,
+    price: 99000,
     audits: 100,
     mentions: 100,
     aiCredits: 400,
