@@ -215,6 +215,8 @@ export const deleteProject = createServerFn({ method: "POST" })
     if (projectError) throw new Error(projectError.message);
     if (!project) throw new Error("프로젝트를 찾을 수 없습니다.");
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { data: audits } = await supabase
       .from("audits")
       .select("id")
@@ -222,8 +224,8 @@ export const deleteProject = createServerFn({ method: "POST" })
     const auditIds = (audits ?? []).map((a) => a.id);
 
     if (auditIds.length > 0) {
-      await supabase.from("shared_reports").delete().in("audit_id", auditIds);
-      await supabase.from("audit_items").delete().in("audit_id", auditIds);
+      await supabaseAdmin.from("shared_reports").delete().in("audit_id", auditIds);
+      await supabaseAdmin.from("audit_items").delete().in("audit_id", auditIds);
     }
 
     const childTables = [
@@ -239,12 +241,12 @@ export const deleteProject = createServerFn({ method: "POST" })
       "search_console_snapshots",
     ] as const;
     for (const table of childTables) {
-      await supabase.from(table).delete().eq("project_id", projectId);
+      await supabaseAdmin.from(table).delete().eq("project_id", projectId);
     }
 
-    await supabase.from("audits").delete().eq("project_id", projectId);
+    await supabaseAdmin.from("audits").delete().eq("project_id", projectId);
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("projects")
       .delete()
       .eq("id", projectId)
