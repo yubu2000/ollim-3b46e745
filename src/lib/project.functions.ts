@@ -192,7 +192,7 @@ export const getTrustTags = createServerFn({ method: "POST" })
         status: result.status,
         finalUrl: result.finalUrl,
         canonical: result.canonical,
-        canonicalOk: result.hasCanonical,
+        canonicalOk: Boolean(result.canonical),
         jsonldTypes: result.jsonldTypes,
         organizationOk: hasOrganization,
       },
