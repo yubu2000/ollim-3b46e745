@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BarChart3,
@@ -87,12 +87,20 @@ function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const statusFn = useServerFn(getAdminStatus);
   const adminStatus = useQuery({
-    queryKey: ["admin-status"],
+    queryKey: ["admin-status", user?.id],
     enabled: Boolean(user),
     staleTime: 5 * 60_000,
     queryFn: () => statusFn({}),
   });
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const handleSignOut = async () => {
+    await qc.cancelQueries();
+    qc.clear();
+    await signOut();
+    navigate({ to: "/auth", replace: true });
+  };
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
