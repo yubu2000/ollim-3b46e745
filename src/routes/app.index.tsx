@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Clock, Loader2, Plus, Radar } from "lucide-react";
+import { Clock, Loader2, Plus, Radar, Trash2 } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -30,7 +30,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
 import { runAudit } from "@/lib/geo.functions";
-import { getProjectsSummary } from "@/lib/project.functions";
+import { getProjectsSummary, deleteProject } from "@/lib/project.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ScoreRing } from "@/components/ScoreRing";
 import { SearchConsoleCard } from "@/components/SearchConsoleCard";
 
@@ -200,9 +211,21 @@ function AutoAuditCard() {
 }
 
 function ProjectListCard() {
-  const { projects, project, selectProject } = useProjects();
+  const { projects, project, selectProject, refetch } = useProjects();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const summaryFn = useServerFn(getProjectsSummary);
+  const removeFn = useServerFn(deleteProject);
+  const remove = useMutation({
+    mutationFn: (projectId: string) => removeFn({ data: { projectId } }),
+    onSuccess: (res: { name: string }) => {
+      toast.success(`"${res.name}" 프로젝트를 삭제했습니다.`);
+      if (typeof window !== "undefined") localStorage.removeItem("geo:project");
+      refetch();
+      void queryClient.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const summary = useQuery({
     queryKey: ["projects-summary"],
     queryFn: () => summaryFn({ data: undefined }),
@@ -227,14 +250,14 @@ function ProjectListCard() {
         {projects.map((p) => {
           const s = stat(p.id);
           return (
+            <div key={p.id} className="flex items-center gap-2">
             <button
-              key={p.id}
               type="button"
               onClick={() => {
                 selectProject(p.id);
                 navigate({ to: "/app/project/$id", params: { id: p.id } });
               }}
-              className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+              className={`flex min-w-0 flex-1 items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                 p.id === project?.id ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary"
               }`}
             >
@@ -249,7 +272,38 @@ function ProjectListCard() {
                 </span>
               </span>
               {p.id === project?.id && <Badge variant="secondary">선택됨</Badge>}
-            </button>
+              </button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`${p.name} 프로젝트 삭제`}
+                    disabled={remove.isPending}
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                  >
+                    {remove.isPending && remove.variables === p.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>프로젝트를 삭제할까요?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      "{p.name}"의 진단 기록, 멘션 결과, 생성된 콘텐츠, 알림 설정이 모두 삭제되며
+                      되돌릴 수 없습니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>취소</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove.mutate(p.id)}>삭제</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           );
         })}
       </CardContent>
