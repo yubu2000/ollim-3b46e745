@@ -198,3 +198,60 @@ export const getTrustTags = createServerFn({ method: "POST" })
       },
     };
   });
+
+/** 프로젝트와 관련 데이터(진단·멘션·콘텐츠·알림 등)를 모두 삭제합니다. */
+export const deleteProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ projectId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const projectId = data.projectId;
+
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("id, name")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (projectError) throw new Error(projectError.message);
+    if (!project) throw new Error("프로젝트를 찾을 수 없습니다.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: audits } = await supabase
+      .from("audits")
+      .select("id")
+      .eq("project_id", projectId);
+    const auditIds = (audits ?? []).map((a) => a.id);
+
+    if (auditIds.length > 0) {
+      await supabaseAdmin.from("shared_reports").delete().in("audit_id", auditIds);
+      await supabaseAdmin.from("audit_items").delete().in("audit_id", auditIds);
+    }
+
+    const childTables = [
+      "ai_usage_events",
+      "alert_events",
+      "alert_rules",
+      "competitor_audits",
+      "competitor_sites",
+      "generated_articles",
+      "mention_runs",
+      "prompts",
+      "publish_verifications",
+      "search_console_snapshots",
+    ] as const;
+    for (const table of childTables) {
+      await supabaseAdmin.from(table).delete().eq("project_id", projectId);
+    }
+
+    await supabaseAdmin.from("audits").delete().eq("project_id", projectId);
+
+    const { error } = await supabaseAdmin
+      .from("projects")
+      .delete()
+      .eq("id", projectId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+
+    return { deleted: true, name: project.name };
+  });
