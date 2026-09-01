@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScoreRing } from "@/components/ScoreRing";
 import { createShareLink, revokeShareLink, getBilling } from "@/lib/saas.functions";
 import { KeywordSuggestionsCard } from "@/components/KeywordSuggestions";
+import { AiVerificationCard } from "@/components/AiVerificationCard";
 import { FIX_GUIDES } from "@/lib/fix-guides";
 import { SchemaStudio } from "@/components/SchemaStudio";
 import { PublishVerifier } from "@/components/PublishVerifier";
@@ -206,6 +207,8 @@ function AuditDetail() {
           </CardContent>
         </Card>
       )}
+
+      <AiVerificationCard data={(data.audit as { ai_verification?: unknown }).ai_verification} />
 
       <KeywordSuggestionsCard auditId={id} />
 

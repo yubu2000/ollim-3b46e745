@@ -9,6 +9,7 @@ import {
   runChecks,
   score,
   summarize,
+  verifyWithModels,
 } from "./geo-engine.server";
 
 export const runAudit = createServerFn({ method: "POST" })
@@ -35,6 +36,7 @@ export const runAudit = createServerFn({ method: "POST" })
     const seo = score(items, "SEO");
     const geo = score(items, "GEO");
     const summary = await summarize(url, items, project.brand_name);
+    const aiVerification = await verifyWithModels(url, project.brand_name, html);
 
 
     const { data: audit, error } = await supabase
@@ -47,6 +49,7 @@ export const runAudit = createServerFn({ method: "POST" })
         geo_score: geo,
         status: "completed",
         summary,
+        ai_verification: aiVerification as never,
       })
       .select("id")
       .single();
@@ -218,6 +221,8 @@ ${data.content.slice(0, 6000)}
       return raw.match(re)?.[1]?.trim() ?? "";
     };
     await consume(context.userId, "ai", AI_COST.optimize);
+    const { logAiUsage } = await import("./billing.server");
+    await logAiUsage(context.userId, "optimize", AI_COST.optimize, { detail: data.topic });
     return {
       rewrite: part("REWRITE") || raw,
       faq: part("FAQ"),

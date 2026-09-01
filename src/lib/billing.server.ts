@@ -97,10 +97,32 @@ export async function assertExportAllowed(userId: string) {
   return plan;
 }
 
-/** AI 작업 전용 헬퍼: 실행 전 크레딧을 확인하고, 성공 후 차감합니다. */
-export async function withAiCredits<T>(userId: string, cost: number, run: () => Promise<T>): Promise<T> {
+/** AI 크레딧 사용 내역 1건 기록 (표시용 원장). */
+export async function logAiUsage(
+  userId: string,
+  action: string,
+  credits: number,
+  meta?: { projectId?: string | null; detail?: string | null },
+) {
+  await supabaseAdmin.from("ai_usage_events").insert({
+    user_id: userId,
+    project_id: meta?.projectId ?? null,
+    action,
+    credits,
+    detail: meta?.detail ?? null,
+  });
+}
+
+/** AI 작업 전용 헬퍼: 실행 전 크레딧을 확인하고, 성공 후 차감·기록합니다. */
+export async function withAiCredits<T>(
+  userId: string,
+  cost: number,
+  run: () => Promise<T>,
+  meta?: { action?: string; projectId?: string | null; detail?: string | null },
+): Promise<T> {
   await assertQuota(userId, "ai", cost);
   const result = await run();
   await consume(userId, "ai", cost);
+  await logAiUsage(userId, meta?.action ?? "ai", cost, meta);
   return result;
 }

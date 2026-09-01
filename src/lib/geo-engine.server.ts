@@ -340,6 +340,77 @@ ${failed.map((f) => `- [${f.category}] ${f.title}: ${f.evidence}`).join("\n") ||
   }
 }
 
+export type AiVerification = {
+  model: string;
+  label: string;
+  ok: boolean;
+  geoScore: number | null;
+  verdict: string;
+  quotable: string[];
+  gaps: string[];
+  raw: string;
+  checkedAt: string;
+};
+
+/** 실제 LLM에 페이지 본문을 그대로 보내 GEO 인용 가능성을 교차 검증합니다. */
+export async function verifyWithModels(
+  url: string,
+  brand: string,
+  html: string,
+): Promise<AiVerification[]> {
+  const text = stripTags(html).slice(0, 6000);
+  const models = MENTION_MODELS.slice(0, 2);
+
+  const prompt = `아래는 "${brand}" 브랜드의 실제 페이지(${url}) 본문 발췌다.
+"""
+${text}
+"""
+이 페이지를 AI 검색(생성형 엔진)이 답변에 인용할 수 있는지 직접 판단해라.
+반드시 아래 JSON 하나만 출력해라(코드펜스 금지):
+{"geoScore": 0~100 정수, "verdict": "3문장 이내 한국어 총평", "quotable": ["실제 본문에서 그대로 인용 가능한 문장 최대 3개"], "gaps": ["AI가 인용하기 어려운 이유 최대 3개"]}`;
+
+  const results = await Promise.all(
+    models.map(async (m): Promise<AiVerification> => {
+      const checkedAt = new Date().toISOString();
+      try {
+        const raw = await callModel(m.id, [{ role: "user", content: prompt }]);
+        const json = raw.match(/\{[\s\S]*\}/)?.[0] ?? "";
+        const parsed = JSON.parse(json) as {
+          geoScore?: number;
+          verdict?: string;
+          quotable?: string[];
+          gaps?: string[];
+        };
+        return {
+          model: m.id,
+          label: m.label,
+          ok: true,
+          geoScore: typeof parsed.geoScore === "number" ? Math.round(parsed.geoScore) : null,
+          verdict: parsed.verdict ?? "",
+          quotable: (parsed.quotable ?? []).slice(0, 3),
+          gaps: (parsed.gaps ?? []).slice(0, 3),
+          raw: raw.slice(0, 4000),
+          checkedAt,
+        };
+      } catch (error) {
+        return {
+          model: m.id,
+          label: m.label,
+          ok: false,
+          geoScore: null,
+          verdict: error instanceof Error ? error.message : "모델 호출 실패",
+          quotable: [],
+          gaps: [],
+          raw: "",
+          checkedAt,
+        };
+      }
+    }),
+  );
+
+  return results;
+}
+
 export function analyzeMention(answer: string, brand: string, competitors: string[]) {
   const lower = answer.toLowerCase();
   const idx = lower.indexOf(brand.toLowerCase());

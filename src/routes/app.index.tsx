@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
 import { runAudit } from "@/lib/geo.functions";
+import { getProjectsSummary } from "@/lib/project.functions";
 import { ScoreRing } from "@/components/ScoreRing";
 import { SearchConsoleCard } from "@/components/SearchConsoleCard";
 
@@ -200,28 +201,57 @@ function AutoAuditCard() {
 
 function ProjectListCard() {
   const { projects, project, selectProject } = useProjects();
+  const navigate = useNavigate();
+  const summaryFn = useServerFn(getProjectsSummary);
+  const summary = useQuery({
+    queryKey: ["projects-summary"],
+    queryFn: () => summaryFn({ data: undefined }),
+  });
+
+  const stat = (pid: string) => summary.data?.projects.find((p: { id: string }) => p.id === pid);
+  const limits = summary.data?.limits;
+  const usage = summary.data?.usage;
+
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">내 프로젝트 ({projects.length})</CardTitle>
+        {limits && usage && (
+          <p className="text-xs text-muted-foreground">
+            이번 달 계정 한도 · 진단 {usage.audit}/{limits.audit}회 · 멘션 {usage.mention}/{limits.mention}회 · AI{" "}
+            {usage.ai}/{limits.ai}크레딧 (남은 진단 {Math.max(0, limits.audit - usage.audit)}회)
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-2">
-        {projects.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => selectProject(p.id)}
-            className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
-              p.id === project?.id ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary"
-            }`}
-          >
-            <span className="truncate pr-3">
-              <span className="font-medium">{p.name}</span>
-              <span className="ml-2 text-xs text-muted-foreground">{p.site_url}</span>
-            </span>
-            {p.id === project?.id && <Badge variant="secondary">선택됨</Badge>}
-          </button>
-        ))}
+        {projects.map((p) => {
+          const s = stat(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                selectProject(p.id);
+                navigate({ to: "/app/project/$id", params: { id: p.id } });
+              }}
+              className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                p.id === project?.id ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary"
+              }`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">
+                  <span className="font-medium">{p.name}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">{p.site_url}</span>
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  이번 달 진단 {s?.auditsThisMonth ?? 0}회 · 멘션 {s?.mentionsThisMonth ?? 0}회 · AI{" "}
+                  {s?.aiCreditsThisMonth ?? 0}크레딧 · 누적 진단 {s?.auditsTotal ?? 0}회
+                </span>
+              </span>
+              {p.id === project?.id && <Badge variant="secondary">선택됨</Badge>}
+            </button>
+          );
+        })}
       </CardContent>
     </Card>
   );

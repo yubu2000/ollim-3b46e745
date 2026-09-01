@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage_events: {
+        Row: {
+          action: string
+          created_at: string
+          credits: number
+          detail: string | null
+          id: string
+          project_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          credits?: number
+          detail?: string | null
+          id?: string
+          project_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          credits?: number
+          detail?: string | null
+          id?: string
+          project_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alert_events: {
         Row: {
           created_at: string
@@ -151,6 +189,7 @@ export type Database = {
       }
       audits: {
         Row: {
+          ai_verification: Json | null
           created_at: string
           geo_score: number
           id: string
@@ -163,6 +202,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_verification?: Json | null
           created_at?: string
           geo_score?: number
           id?: string
@@ -175,6 +215,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_verification?: Json | null
           created_at?: string
           geo_score?: number
           id?: string
