@@ -178,6 +178,8 @@ export const generateArticle = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     await consume(userId, "ai", AI_COST.article);
+    const { logAiUsage } = await import("./billing.server");
+    await logAiUsage(userId, "article", AI_COST.article, { projectId: data.projectId ?? null, detail: title });
 
     return { ...draft, id: saved.id, jsonld: JSON.stringify(draft.jsonld, null, 2) };
   });
