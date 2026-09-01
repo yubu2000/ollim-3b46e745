@@ -128,7 +128,7 @@ function AppLayout() {
             <ProjectSwitcher />
             <div className="ml-auto flex items-center gap-2">
               <span className="hidden text-xs text-muted-foreground md:inline">{user.email}</span>
-              <Button variant="ghost" size="icon" onClick={() => void signOut()} aria-label="로그아웃">
+              <Button variant="ghost" size="icon" onClick={() => void handleSignOut()} aria-label="로그아웃">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
