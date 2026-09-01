@@ -27,6 +27,7 @@ import {
   getAdminStatus,
 } from "@/lib/admin.functions";
 import { formatKrw } from "@/lib/plans";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/app/admin")({
   head: () => ({
@@ -44,8 +45,13 @@ export const Route = createFileRoute("/app/admin")({
 });
 
 function AdminPage() {
+  const { user } = useAuth();
   const statusFn = useServerFn(getAdminStatus);
-  const status = useQuery({ queryKey: ["admin-status"], queryFn: () => statusFn({}) });
+  const status = useQuery({
+    queryKey: ["admin-status", user?.id],
+    enabled: Boolean(user),
+    queryFn: () => statusFn({}),
+  });
 
   if (status.isLoading) return <p className="text-sm text-muted-foreground">확인 중…</p>;
   if (!status.data?.admin)
