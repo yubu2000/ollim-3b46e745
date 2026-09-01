@@ -301,6 +301,8 @@ function ProjectDashboard() {
 
       {showCreate && <CreateProject />}
 
+      <ProjectListCard />
+
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-5">
           <div className="min-w-[240px] flex-1 space-y-2">
