@@ -34,18 +34,18 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     aiCredits: 400,
     exports: true,
     blurb: "한 브랜드를 꾸준히 모니터링",
-    features: ["진단 100회/월", "멘션 체크 100회/월", "AI 크레딧 400/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림"],
+    features: ["진단 100회/월", "멘션 체크 100회/월", "AI 크레딧 200/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림"],
   },
   business: {
     id: "business",
     label: "Business",
-    price: 99000,
+    price: 297000,
     audits: 2000,
     mentions: 2000,
     aiCredits: 4000,
     exports: true,
     blurb: "여러 브랜드·대행사용",
-    features: ["진단 2,000회/월", "멘션 체크 2,000회/월", "AI 크레딧 4,000/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림", "사용량 리포트"],
+    features: ["진단 21,000회/월", "멘션 체크 21,000회/월", "AI 크레딧 2,000/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림", "사용량 리포트"],
   },
 };
 
