@@ -244,7 +244,7 @@ export const renderArticleHtml = createServerFn({ method: "POST" })
     };
   });
 
-/** The member's own WordPress connection (application password is never returned). */
+/** The member's own blog connection (application password is never returned). */
 export const getWordPressSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -316,7 +316,7 @@ export const createArticleImage = createServerFn({ method: "POST" })
     });
   });
 
-/** Publish a generated draft to the member's own WordPress blog (falls back to the shared connector). */
+/** Publish a generated draft to the member's own blog (falls back to the shared connector). */
 export const publishArticleToWordPress = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

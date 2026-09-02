@@ -28,7 +28,7 @@ type Site = {
   last_check_ok: boolean | null;
 };
 
-/** Per-member WordPress connection used when publishing generated drafts. */
+/** Per-member blog connection used when publishing generated drafts. */
 export function WordPressSettings() {
   const qc = useQueryClient();
   const getFn = useServerFn(getWordPressSite);
@@ -58,7 +58,7 @@ export function WordPressSettings() {
     onSuccess: async () => {
       setAppPassword("");
       await qc.invalidateQueries({ queryKey: ["wordpress-site"] });
-      toast.success("WordPress 연결을 확인하고 저장했습니다.");
+      toast.success("블로그 연결을 확인하고 저장했습니다.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -77,10 +77,10 @@ export function WordPressSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Globe className="h-4 w-4" /> 내 WordPress 연결
+          <Globe className="h-4 w-4" /> 내 블로그 연결
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          회원 각자의 WordPress 사이트로 글이 배포됩니다. WordPress 관리자 &gt; 사용자 &gt; 프로필에서
+          회원 각자의 블로그로 글이 배포됩니다. 블로그 관리자 &gt; 사용자 &gt; 프로필에서
           “애플리케이션 비밀번호”를 발급해 입력해 주세요.
         </p>
       </CardHeader>

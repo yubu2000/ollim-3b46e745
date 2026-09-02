@@ -1,4 +1,4 @@
-// Server-only: publish a generated draft to a connected WordPress blog.
+// Server-only: publish a generated draft to a connected blog.
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/wordpress";
 
 function mdToHtml(md: string): string {
@@ -111,8 +111,8 @@ async function wpFetch(site: UserWpSite, path: string, init: RequestInit) {
   });
   if (!res.ok) {
     const body = await res.text();
-    console.error(`WordPress request failed [${res.status}] ${path}: ${body.slice(0, 500)}`);
-    throw new Error(`WordPress 요청 실패 [${res.status}]: ${body.slice(0, 300)}`);
+    console.error(`Blog request failed [${res.status}] ${path}: ${body.slice(0, 500)}`);
+    throw new Error(`블로그 요청 실패 [${res.status}]: ${body.slice(0, 300)}`);
   }
   return res;
 }
@@ -124,7 +124,7 @@ export async function testUserSite(site: UserWpSite) {
   return { ok: true, name: me.name ?? me.slug ?? site.username };
 }
 
-/** Upload a base64 data URL (or remote image URL) into the member's WordPress media library. */
+/** Upload a base64 data URL (or remote image URL) into the member's blog media library. */
 export async function uploadMediaToUserSite(
   site: UserWpSite,
   image: { dataUrl?: string; url?: string; filename?: string; alt?: string },
@@ -174,7 +174,7 @@ export async function uploadMediaToUserSite(
   return { id: media.id, url: media.source_url, alt: image.alt ?? "" };
 }
 
-/** Publish to the member's own WordPress site with their application password. */
+/** Publish to the member's own blog with their application password. */
 export async function publishToUserSite(
   site: UserWpSite,
   opts: {
@@ -214,7 +214,7 @@ export async function publishPost(opts: {
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const wpKey = process.env["WORDPRESS_API_KEY"];
   if (!lovableKey || !wpKey) {
-    throw new Error("WordPress 연결이 아직 설정되지 않았습니다. 연결 후 다시 시도해 주세요.");
+    throw new Error("블로그 연결이 아직 설정되지 않았습니다. 연결 후 다시 시도해 주세요.");
   }
 
   const res = await fetch(`${GATEWAY_URL}/posts`, {
@@ -234,8 +234,8 @@ export async function publishPost(opts: {
 
   if (!res.ok) {
     const body = await res.text();
-    console.error(`WordPress publish failed [${res.status}]: ${body}`);
-    throw new Error(`WordPress 게시 실패 [${res.status}]: ${body.slice(0, 400)}`);
+    console.error(`Blog publish failed [${res.status}]: ${body}`);
+    throw new Error(`블로그 게시 실패 [${res.status}]: ${body.slice(0, 400)}`);
   }
 
   const post = (await res.json()) as { id?: number; link?: string; status?: string };

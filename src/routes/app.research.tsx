@@ -212,7 +212,7 @@ function ResearchPage() {
                 <Lightbulb className="h-4 w-4" /> 콘텐츠 제안 (자동 생성)
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                위 주제·질문을 바탕으로 만든 콘텐츠 제안입니다. “글 자동 생성” 후 WordPress로 바로
+                위 주제·질문을 바탕으로 만든 콘텐츠 제안입니다. “글 자동 생성” 후 블로그로 바로
                 배포할 수 있습니다.
               </p>
             </CardHeader>

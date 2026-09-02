@@ -272,7 +272,7 @@ export function ArticleWriter({
                   ) : (
                     <Upload className="mr-1 h-4 w-4" />
                   )}
-                  WordPress에 배포하기
+                  블로그에 배포하기
                 </Button>
                 <Button
                   size="sm"
@@ -280,7 +280,7 @@ export function ArticleWriter({
                   disabled={publish.isPending}
                   onClick={() => publish.mutate("draft")}
                 >
-                  WordPress 임시저장
+                  블로그 임시저장
                 </Button>
               </>
             )}

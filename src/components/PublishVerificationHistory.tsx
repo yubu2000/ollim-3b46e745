@@ -30,7 +30,7 @@ function Flag({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
-/** Verification results recorded for this report — WordPress 게시 후 자동으로도 채워집니다. */
+/** Verification results recorded for this report — 블로그 게시 후 자동으로도 채워집니다. */
 export function PublishVerificationHistory({ auditId }: { auditId: string }) {
   const fn = useServerFn(listPublishVerifications);
   const q = useQuery({
@@ -43,7 +43,7 @@ export function PublishVerificationHistory({ auditId }: { auditId: string }) {
   if (rows.length === 0) {
     return (
       <p className="text-xs text-muted-foreground">
-        아직 기록된 게시 검증 결과가 없습니다. 위에서 주소를 검증하거나 WordPress에 배포하면 자동으로 기록됩니다.
+        아직 기록된 게시 검증 결과가 없습니다. 위에서 주소를 검증하거나 블로그에 배포하면 자동으로 기록됩니다.
       </p>
     );
   }
