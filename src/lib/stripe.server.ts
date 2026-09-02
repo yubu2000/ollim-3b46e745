@@ -65,8 +65,8 @@ export async function createCheckoutSession(params: {
     "subscription_data[metadata][user_id]": params.userId,
     "subscription_data[metadata][plan]": params.plan,
     "subscription_data[metadata][billing_interval]": params.interval,
-    success_url: `${params.origin}/app/subscribe?checkout=success`,
-    cancel_url: `${params.origin}/app/subscribe?checkout=cancel`,
+    success_url: `${params.origin}/app/billing?checkout=success`,
+    cancel_url: `${params.origin}/app/billing?checkout=cancel`,
   });
   return session.url;
 }

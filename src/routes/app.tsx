@@ -76,8 +76,7 @@ const navGroups: NavGroup[] = [
     icon: BarChart3,
     items: [
       { to: "/app/reports", label: "리포트", exact: false },
-      { to: "/app/billing", label: "요금제", exact: false },
-      { to: "/app/subscribe", label: "구독 구매", exact: false },
+      { to: "/app/billing", label: "요금제 · 구독", exact: false },
     ],
   },
 ];
