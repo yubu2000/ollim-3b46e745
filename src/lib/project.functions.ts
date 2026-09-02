@@ -255,3 +255,93 @@ export const deleteProject = createServerFn({ method: "POST" })
 
     return { deleted: true, name: project.name };
   });
+
+/** 사이트 주소를 비교용 도메인으로 정규화합니다 (소문자, www 제거). */
+function normalizeHost(raw: string) {
+  const value = raw.trim();
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    return new URL(withScheme).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return value.toLowerCase().replace(/^www\./, "").replace(/\/.*$/, "");
+  }
+}
+
+/**
+ * 프로젝트 생성.
+ * - Free 플랜은 프로젝트 1개까지만 등록 가능
+ * - 동일 도메인을 여러 계정으로 중복 등록해 무료 한도를 우회하는 것을 차단
+ */
+export const createProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        name: z.string().trim().min(1),
+        siteUrl: z.string().trim().min(3),
+        brandName: z.string().trim().min(1),
+        competitors: z.array(z.string().trim().min(1)).default([]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const { getLimits } = await import("./billing.server");
+    const { PROJECT_LIMIT } = await import("./plans");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const host = normalizeHost(data.siteUrl);
+    if (!host || !host.includes(".")) throw new Error("사이트 주소를 정확히 입력해 주세요.");
+
+    const limits = await getLimits(userId);
+    const plan = limits.plan;
+    const projectLimit = PROJECT_LIMIT[plan];
+
+    const { data: mine, error: mineError } = await supabaseAdmin
+      .from("projects")
+      .select("id, site_url")
+      .eq("user_id", userId);
+    if (mineError) throw new Error(mineError.message);
+
+    if ((mine ?? []).length >= projectLimit) {
+      throw new Error(
+        plan === "free"
+          ? "무료 플랜은 프로젝트를 1개만 등록할 수 있습니다. 플랜을 업그레이드하면 더 많은 사이트를 모니터링할 수 있어요."
+          : `현재 플랜에서 등록할 수 있는 프로젝트 수(${projectLimit}개)를 모두 사용했습니다.`,
+      );
+    }
+
+    if ((mine ?? []).some((p) => normalizeHost(p.site_url) === host)) {
+      throw new Error("이미 같은 사이트로 등록된 프로젝트가 있습니다.");
+    }
+
+    // 다른 계정이 같은 도메인을 이미 등록했는지 확인 (무료 계정 다중 생성 우회 차단)
+    const { data: others, error: othersError } = await supabaseAdmin
+      .from("projects")
+      .select("id, user_id, site_url")
+      .neq("user_id", userId)
+      .ilike("site_url", `%${host}%`);
+    if (othersError) throw new Error(othersError.message);
+
+    const claimed = (others ?? []).some((p) => normalizeHost(p.site_url) === host);
+    if (claimed) {
+      throw new Error(
+        "이 사이트는 이미 다른 계정에 등록되어 있습니다. 동일한 사이트는 하나의 계정에서만 진단할 수 있습니다.",
+      );
+    }
+
+    const { data: created, error } = await supabaseAdmin
+      .from("projects")
+      .insert({
+        user_id: userId,
+        name: data.name,
+        site_url: data.siteUrl,
+        brand_name: data.brandName,
+        competitors: data.competitors,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    return { id: created.id, plan, projectLimit };
+  });
