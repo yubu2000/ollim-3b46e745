@@ -77,6 +77,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/app/reports", label: "리포트", exact: false },
       { to: "/app/billing", label: "요금제", exact: false },
+      { to: "/app/subscribe", label: "구독 구매", exact: false },
     ],
   },
 ];

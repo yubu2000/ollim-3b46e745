@@ -48,6 +48,7 @@ export async function createCheckoutSession(params: {
   plan: string;
   planLabel: string;
   amountKrw: number;
+  interval: "monthly" | "yearly";
   origin: string;
 }) {
   const session = await call<{ url: string }>("/checkout/sessions", {
@@ -56,14 +57,16 @@ export async function createCheckoutSession(params: {
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "krw",
     "line_items[0][price_data][unit_amount]": String(params.amountKrw),
-    "line_items[0][price_data][recurring][interval]": "month",
-    "line_items[0][price_data][product_data][name]": `GEO Radar ${params.planLabel}`,
+    "line_items[0][price_data][recurring][interval]": params.interval === "yearly" ? "year" : "month",
+    "line_items[0][price_data][product_data][name]": `올림연구소 ${params.planLabel} (${params.interval === "yearly" ? "연간" : "월간"})`,
     "metadata[user_id]": params.userId,
     "metadata[plan]": params.plan,
+    "metadata[billing_interval]": params.interval,
     "subscription_data[metadata][user_id]": params.userId,
     "subscription_data[metadata][plan]": params.plan,
-    success_url: `${params.origin}/app/billing?checkout=success`,
-    cancel_url: `${params.origin}/app/billing?checkout=cancel`,
+    "subscription_data[metadata][billing_interval]": params.interval,
+    success_url: `${params.origin}/app/subscribe?checkout=success`,
+    cancel_url: `${params.origin}/app/subscribe?checkout=cancel`,
   });
   return session.url;
 }

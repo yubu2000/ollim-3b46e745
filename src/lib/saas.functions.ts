@@ -11,6 +11,7 @@ export const getBilling = createServerFn({ method: "POST" })
     return {
       plan,
       usage,
+      interval: limits.interval,
       limits: { audit: limits.audit, mention: limits.mention, ai: limits.ai },
       overridden: limits.overridden,
       exports: limits.exports,
@@ -21,10 +22,16 @@ export const getBilling = createServerFn({ method: "POST" })
 export const startCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ plan: z.enum(["pro", "business"]), origin: z.string().url() }).parse(input),
+    z
+      .object({
+        plan: z.enum(["pro", "business"]),
+        interval: z.enum(["monthly", "yearly"]).default("monthly"),
+        origin: z.string().url(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { PLANS } = await import("./plans");
+    const { PLANS, priceFor } = await import("./plans");
     const { findOrCreateCustomer, createCheckoutSession } = await import("./stripe.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -45,7 +52,8 @@ export const startCheckout = createServerFn({ method: "POST" })
       userId: context.userId,
       plan: data.plan,
       planLabel: spec.label,
-      amountKrw: spec.price,
+      amountKrw: priceFor(data.plan, data.interval),
+      interval: data.interval,
       origin: data.origin,
     });
     return { url };
