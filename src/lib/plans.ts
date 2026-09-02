@@ -49,6 +49,13 @@ export const PLANS: Record<PlanId, PlanSpec> = {
   },
 };
 
+/** 등록 가능한 프로젝트 수 (Free는 1개). */
+export const PROJECT_LIMIT: Record<PlanId, number> = {
+  free: 1,
+  pro: 20,
+  business: 200,
+};
+
 export const COMPETITOR_LIMIT: Record<PlanId, number> = {
   free: 1,
   pro: 20,
