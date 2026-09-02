@@ -30,7 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/lib/project-context";
 import { runAudit } from "@/lib/geo.functions";
-import { getProjectsSummary, deleteProject } from "@/lib/project.functions";
+import { getProjectsSummary, deleteProject, createProject } from "@/lib/project.functions";
 import {
   AlertDialog,
   AlertDialogAction,
