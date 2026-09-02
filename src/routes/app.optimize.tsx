@@ -53,7 +53,7 @@ function OptimizePage() {
     },
     onSuccess: (res) => {
       setPublished({ link: res.link, status: res.status });
-      toast.success(res.status === "publish" ? "WordPress에 게시했습니다." : "WordPress에 임시저장했습니다.");
+      toast.success(res.status === "publish" ? "블로그에 게시했습니다." : "블로그에 임시저장했습니다.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -119,11 +119,11 @@ function OptimizePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">WordPress 배포</CardTitle>
+              <CardTitle className="text-base">블로그 배포</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                재작성된 본문과 FAQ 스키마를 함께 담아 연결된 WordPress 블로그로 보냅니다.
+                재작성된 본문과 FAQ 스키마를 함께 담아 연결된 블로그로 보냅니다.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button disabled={publish.isPending} onClick={() => publish.mutate("publish")}>
@@ -132,14 +132,14 @@ function OptimizePage() {
                   ) : (
                     <Upload className="mr-2 h-4 w-4" />
                   )}
-                  WordPress에 배포하기
+                  블로그에 배포하기
                 </Button>
                 <Button
                   variant="outline"
                   disabled={publish.isPending}
                   onClick={() => publish.mutate("draft")}
                 >
-                  WordPress 임시저장
+                  블로그 임시저장
                 </Button>
               </div>
               {published?.link && (
