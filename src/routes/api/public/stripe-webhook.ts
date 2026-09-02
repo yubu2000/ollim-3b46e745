@@ -57,6 +57,7 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
             {
               user_id: userId,
               plan: cancelled ? "free" : (metadata["plan"] ?? "pro"),
+              billing_interval: cancelled ? "monthly" : (metadata["billing_interval"] ?? "monthly"),
               status: cancelled ? "canceled" : "active",
               stripe_customer_id: String(obj["customer"] ?? "") || null,
               stripe_subscription_id:

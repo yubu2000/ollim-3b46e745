@@ -62,6 +62,39 @@ export const COMPETITOR_LIMIT: Record<PlanId, number> = {
   business: 100,
 };
 
+export type BillingInterval = "monthly" | "yearly";
+
+/** 연간 결제는 12개월분을 10개월 가격에 제공합니다. */
+export const YEARLY_MONTHS_CHARGED = 10;
+
+/** 연간 결제 시 월 AI 크레딧 보너스 (+20%). */
+export const YEARLY_AI_BONUS = 0.2;
+
+export function intervalOf(value: string | null | undefined): BillingInterval {
+  return value === "yearly" ? "yearly" : "monthly";
+}
+
+/** 해당 플랜·주기의 실제 결제 금액 (KRW). */
+export function priceFor(plan: PlanId, interval: BillingInterval) {
+  const monthly = PLANS[plan].price;
+  return interval === "yearly" ? monthly * YEARLY_MONTHS_CHARGED : monthly;
+}
+
+/** 해당 플랜·주기의 월 AI 크레딧 한도. 연간 결제는 20% 더 많습니다. */
+export function aiCreditsFor(plan: PlanId, interval: BillingInterval) {
+  const base = PLANS[plan].aiCredits;
+  if (interval !== "yearly" || base === 0) return base;
+  return Math.round(base * (1 + YEARLY_AI_BONUS));
+}
+
+export function formatPrice(plan: PlanId, interval: BillingInterval) {
+  const amount = priceFor(plan, interval);
+  if (amount === 0) return "무료";
+  return interval === "yearly"
+    ? `₩${amount.toLocaleString("ko-KR")}/년`
+    : `₩${amount.toLocaleString("ko-KR")}/월`;
+}
+
 export function planOf(value: string | null | undefined): PlanId {
   return value === "pro" || value === "business" ? value : "free";
 }

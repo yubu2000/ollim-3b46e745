@@ -1,6 +1,6 @@
 // Server-only plan / usage enforcement.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { PLANS, planOf, type PlanId } from "./plans";
+import { PLANS, planOf, intervalOf, aiCreditsFor, type BillingInterval, type PlanId } from "./plans";
 
 export type UsageKind = "audit" | "mention" | "ai";
 
@@ -8,15 +8,25 @@ export function currentPeriod() {
   return new Date().toISOString().slice(0, 7); // YYYY-MM
 }
 
-export async function getPlan(userId: string): Promise<PlanId> {
+export async function getSubscription(
+  userId: string,
+): Promise<{ plan: PlanId; interval: BillingInterval }> {
   const { data } = await supabaseAdmin
     .from("subscriptions")
-    .select("plan, status")
+    .select("plan, status, billing_interval")
     .eq("user_id", userId)
     .maybeSingle();
-  if (!data) return "free";
-  if (data.status !== "active" && data.status !== "trialing") return "free";
-  return planOf(data.plan);
+  if (!data || (data.status !== "active" && data.status !== "trialing")) {
+    return { plan: "free", interval: "monthly" };
+  }
+  return {
+    plan: planOf(data.plan),
+    interval: intervalOf((data as { billing_interval?: string | null }).billing_interval),
+  };
+}
+
+export async function getPlan(userId: string): Promise<PlanId> {
+  return (await getSubscription(userId)).plan;
 }
 
 export async function getUsage(userId: string) {
@@ -41,12 +51,14 @@ async function getOverride(userId: string) {
 
 /** Effective limits = plan defaults, widened by any admin override. */
 export async function getLimits(userId: string) {
-  const [plan, override] = await Promise.all([getPlan(userId), getOverride(userId)]);
+  const [sub, override] = await Promise.all([getSubscription(userId), getOverride(userId)]);
+  const plan = sub.plan;
   return {
     plan,
+    interval: sub.interval,
     audit: override?.audits ?? PLANS[plan].audits,
     mention: override?.mentions ?? PLANS[plan].mentions,
-    ai: override?.ai_credits ?? PLANS[plan].aiCredits,
+    ai: override?.ai_credits ?? aiCreditsFor(plan, sub.interval),
     exports: override?.exports ?? PLANS[plan].exports,
     overridden: Boolean(override),
   };
