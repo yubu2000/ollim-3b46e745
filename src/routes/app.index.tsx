@@ -67,37 +67,38 @@ export function CreateProject({ first = false }: { first?: boolean }) {
   const [competitors, setCompetitors] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const create$ = useServerFn(createProject);
+
   async function create(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
     setBusy(true);
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({
-        user_id: user.id,
-        name,
-        site_url: url,
-        brand_name: brand,
-        competitors: competitors
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean),
-      })
-      .select("id")
-      .single();
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const result = await create$({
+        data: {
+          name,
+          siteUrl: url,
+          brandName: brand,
+          competitors: competitors
+            .split(",")
+            .map((c) => c.trim())
+            .filter(Boolean),
+        },
+      });
+      setName("");
+      setUrl("");
+      setBrand("");
+      setCompetitors("");
+      refetch();
+      if (result?.id) selectProject(result.id);
+      toast.success("프로젝트를 만들었습니다.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "프로젝트를 만들지 못했습니다.");
+    } finally {
+      setBusy(false);
     }
-    setName("");
-    setUrl("");
-    setBrand("");
-    setCompetitors("");
-    refetch();
-    if (data?.id) selectProject(data.id);
-    toast.success("프로젝트를 만들었습니다.");
   }
+
 
   return (
     <Card className="mx-auto max-w-xl">
