@@ -2,13 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, CreditCard, Loader2 } from "lucide-react";
+import { Check, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { PLANS, formatKrw, type PlanId } from "@/lib/plans";
-import { getBilling, openBillingPortal, startCheckout } from "@/lib/saas.functions";
+import { Link } from "@tanstack/react-router";
+import { PLANS, formatKrw, type BillingInterval, type PlanId } from "@/lib/plans";
+import { getBilling, openBillingPortal } from "@/lib/saas.functions";
 
 export const Route = createFileRoute("/app/billing")({
   head: () => ({
@@ -27,21 +28,11 @@ export const Route = createFileRoute("/app/billing")({
 
 function BillingPage() {
   const billingFn = useServerFn(getBilling);
-  const checkout = useServerFn(startCheckout);
   const portal = useServerFn(openBillingPortal);
 
   const billing = useQuery({
     queryKey: ["billing"],
     queryFn: () => billingFn({ data: undefined }),
-  });
-
-  const upgrade = useMutation({
-    mutationFn: async (plan: "pro" | "business") =>
-      checkout({ data: { plan, origin: window.location.origin } }),
-    onSuccess: (res) => {
-      window.location.href = res.url;
-    },
-    onError: (e: Error) => toast.error(e.message),
   });
 
   const manage = useMutation({
@@ -73,6 +64,11 @@ function BillingPage() {
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">
             현재 플랜 <Badge className="ml-2">{PLANS[current].label}</Badge>
+            {current !== "free" && (
+              <Badge variant="outline" className="ml-2">
+                {((billing.data?.interval ?? "monthly") as BillingInterval) === "yearly" ? "연간 결제" : "월간 결제"}
+              </Badge>
+            )}
           </CardTitle>
           {current !== "free" && (
             <Button variant="outline" size="sm" onClick={() => manage.mutate()} disabled={manage.isPending}>
@@ -121,13 +117,8 @@ function BillingPage() {
                 ))}
               </ul>
               {plan.id !== "free" && plan.id !== current && (
-                <Button
-                  className="w-full"
-                  onClick={() => upgrade.mutate(plan.id as "pro" | "business")}
-                  disabled={upgrade.isPending}
-                >
-                  {upgrade.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {plan.label}로 업그레이드
+                <Button className="w-full" asChild>
+                  <Link to="/app/subscribe">{plan.label}로 업그레이드</Link>
                 </Button>
               )}
             </CardContent>
