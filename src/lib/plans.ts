@@ -31,10 +31,10 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     price: 99000,
     audits: 100,
     mentions: 100,
-    aiCredits: 400,
+    aiCredits: 200,
     exports: true,
     blurb: "한 브랜드를 꾸준히 모니터링",
-    features: ["진단 100회/월", "멘션 체크 100회/월", "AI 크레딧 200/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림"],
+    features: ["진단 100회/월", "멘션 체크 100회/월", "AI 크레딧 200/월", "프로젝트3개 생성", "PDF 리포트 + 공유 링크", "1개의 워드프레스 등록"],
   },
   business: {
     id: "business",
@@ -44,8 +44,8 @@ export const PLANS: Record<PlanId, PlanSpec> = {
     mentions: 1000,
     aiCredits: 2000,
     exports: true,
-    blurb: "여러 브랜드·대행사용",
-    features: ["진단 1,000회/월", "멘션 체크 1,000회/월", "AI 크레딧 2,000/월", "경쟁사 무제한", "PDF 리포트 + 공유 링크", "이메일 알림", "사용량 리포트"],
+    blurb: "여러 브랜드 모니터링",
+    features: ["진단 1,000회/월", "멘션 체크 1,000회/월", "AI 크레딧 2,000/월", "프로젝트 10개 생성", "PDF 리포트 + 공유 링크", "5개의 워드프레스 등록", "사용량 리포트"],
   },
 };
 

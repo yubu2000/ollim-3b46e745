@@ -164,7 +164,7 @@ function BillingPage() {
                 <div className="rounded-lg bg-muted/50 p-3 text-sm">
                   <div className="font-medium">월 AI 크레딧 {credits.toLocaleString("ko-KR")}</div>
                   <p className="text-xs text-muted-foreground">
-                    리서치 1 · 최적화 2 · 후속 제안 2 · 글 초안 3 · 이미지 4 크레딧
+                    리서치 1 · 최적화 2 · 제안 2 · 글 초안 3 · 이미지 4 크레딧
                   </p>
                 </div>
                 <ul className="space-y-2 text-sm">
