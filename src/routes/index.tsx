@@ -162,8 +162,16 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        GEO Radar · AI 검색 시대의 노출 모니터링
+        <p>GEO Radar · AI 검색 시대의 노출 모니터링</p>
+        <address className="mx-auto mt-4 max-w-3xl px-5 text-xs not-italic leading-relaxed">
+          상호명: 위드넷 | 서울시 금천구 시흥대로 189 인피니움타워 1013호 | 전화번호 : 02-2676-2337 |
+          E-mail: web@withn.net
+          <br />
+          대표자: 유병욱 | 사업자등록번호: 110-06-42589 | 통신판매업신고번호 : 제2017-서울금천-0636호 |
+          개인정보관리책임자 : 유병욱
+        </address>
       </footer>
+
     </div>
   );
 }
